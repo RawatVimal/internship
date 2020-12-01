@@ -17,12 +17,13 @@ docker run \                                        #base command
  docker search mongodb
 
 
+``
 docker run \
     --detach                                        # run docker in background
     --name  <container_name>                        # container name
     --publish= "30980:27017" \                      # which port to use <choice>:<default>
     --volume= $HOME/mongodb_data/db:/data/db \      # where to store data
     mongod
-
+``
 
 

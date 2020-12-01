@@ -17,7 +17,7 @@ docker run \                                        #base command
  docker search mongodb
 
 
-``
+`` bash
 docker run \
     --detach                                        # run docker in background
     --name  <container_name>                        # container name

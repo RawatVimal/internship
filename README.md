@@ -15,7 +15,7 @@ docker run \                                        #base command
 ````
 
 # Search dockehub for mongodb
- docker search mongodb
+ docker search mongod
 
 
 ```` bash

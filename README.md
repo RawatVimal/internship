@@ -24,7 +24,7 @@ docker run \
     --name  <container_name>                        # container name
     --publish= "27017:27017" \                      # which port to use <choice>:<default>
     --volume= $HOME/mongodb_data/db:/data/db \      # where to store data
-    mongod
+    mongo
 ````
 
 

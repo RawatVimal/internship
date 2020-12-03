@@ -28,8 +28,14 @@ docker run \
 ````
 
 # Search dockehub for postgre
- docker search postgres
 
+```` bash
+docker search postgres
+````
+
+```` bash
+docker pull postgres
+````
 
 ```` bash
 docker run -d \

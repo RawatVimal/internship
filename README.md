@@ -1,8 +1,10 @@
 # Search dockehub for neo4j
  docker search neo4j
 
-#Pulling a docker image
+#Pulling a dockerhub
+```` bash
 docker pull neo4j
+````
 
 # Running a neo4J docker
 ```` bash

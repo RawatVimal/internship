@@ -1,12 +1,12 @@
-# Search dockehub for neo4j
+## Search dockehub for neo4j
  docker search neo4j
 
-# Pulling a dockerhub
+### Pulling a dockerhub
 ```` bash
 docker pull neo4j
 ````
 
-# Running a neo4J docker
+### Running a neo4J docker container
 ```` bash
 docker run \                                        #base command
     --detach                                        # run docker in background
@@ -16,10 +16,15 @@ docker run \                                        #base command
     neo4j                                           #what to run
 ````
 
-# Search dockehub for mongodb
+## Search dockehub for mongodb
  docker search mongo
 
+### Pulling mongodb from dockerhub
+```` bash
+docker pull mongo
+````
 
+### Running a mongodb docker container
 ```` bash
 docker run \
     --detach                                        # run docker in background

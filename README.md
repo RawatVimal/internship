@@ -33,17 +33,19 @@ docker run \
     --volume= $HOME/mongodb_data/db:/data/db \      # where to store data
     mongo
 ````
+## PostgreS
 
-# Search dockehub for postgre
+### Search dockehub for postgre
 
 ```` bash
 docker search postgres
 ````
-
+### Pull postgre from dockehub
 ```` bash
 docker pull postgres
 ````
 
+### Running a postgres docker container
 ```` bash
 docker run -d \
     --name some-postgres \
@@ -54,7 +56,7 @@ docker run -d \
     
 ````
 
-# Graph Dataset site (SNAP)
+## Graph Dataset site (SNAP)
 * https://snap.stanford.edu/data/
 
 * https://snap.stanford.edu/data/soc-Pokec.html

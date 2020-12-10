@@ -50,6 +50,8 @@ docker run -d \
 ````
 
 # Graph Dataset site (SNAP)
-https://snap.stanford.edu/data/
+* https://snap.stanford.edu/data/
+
+* https://snap.stanford.edu/data/soc-Pokec.html
 
 

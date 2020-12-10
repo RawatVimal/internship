@@ -1,0 +1,11 @@
+services:
+    image: postgres:12
+    restart: always
+    container_name: "postgre12"
+    volumes:
+            - /var/data/pg12:/var/lib/postgresql/data
+    environment:
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_USER=admin
+    ports:
+            - "30255:5432"

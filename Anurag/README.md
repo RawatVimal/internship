@@ -1,9 +1,9 @@
 ### Side learnings
-* Basic understanding of Databases (MongoDB, PostgreSQL, Neo4J, CouchDB) in context of CRUD operatopns and Aggregation queries.
-* Basic understanding of Docker commands and docker compose. [![link](https://stackify.com/docker-tutorial/)]
-* Working with Python packages(database clients, networkx and other basic ones) [![link](https://networkx.org/)]
-* Understanding of Data lineage discovery and Data Integration basic concepts (some solutions in general):
-* Understanding and development of GraphQL and REST API
+- [ ] Basic understanding of Databases (MongoDB, PostgreSQL, Neo4J, CouchDB) in context of CRUD operatopns and Aggregation queries.
+- [ ] Basic understanding of Docker commands and docker compose. [![link](https://stackify.com/docker-tutorial/)]
+- [ ] Working with Python packages(database clients, networkx and other basic ones) [![link](https://networkx.org/)]
+- [ ] Understanding of Data lineage discovery and Data Integration basic concepts (some solutions in general):
+- [ ] Understanding and development of GraphQL and REST API
 
 ### Main objective
 - [ ] Understanding Aurum paper and work contributed by BASF [![link](https://github.com/mitdbg/aurum-datadiscovery/blob/master/knowledgerepr/fieldnetwork.py)]
@@ -13,11 +13,11 @@
 - [ ] Building an API (only design) to execute pipeline for Data Integration
 
 ### Bonus Point Objective
-* Running Aurum on DISQ data
-* Scheme to improve profiler of Aurum to accomodate column data ontologies
-* Development of a wrapper package (Python and R) around Aurum.
+- [ ] Running Aurum on DISQ data
+- [ ] Scheme to improve profiler of Aurum to accomodate column data ontologies
+- [ ] Development of a wrapper package (Python and R) around Aurum.
 
 ### Minimum expected result
-* Understanding Data Integration and Data discovery and some published litrature on this topic.
-* Understanding Aurum network building scripts and debugging them.
-* Developing scheme for API (only design) to execute pipeline for Data Integration projects
+- [ ] Understanding Data Integration and Data discovery and some published litrature on this topic.
+- [ ] Understanding Aurum network building scripts and debugging them.
+- [ ] Developing scheme for API (only design) to execute pipeline for Data Integration projects

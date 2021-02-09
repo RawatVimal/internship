@@ -1,5 +1,5 @@
+## Internship Goals
 
-/label ~Target
 ### Side learnings
 - [ ] Basic understanding of Databases (MongoDB, PostgreSQL, Neo4J, CouchDB) in context of CRUD operatopns and Aggregation queries.
 - [ ] Basic understanding of Docker commands and docker compose. [![link](https://stackify.com/docker-tutorial/)]

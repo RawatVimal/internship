@@ -3,7 +3,7 @@ from pandas import DataFrame
 
 import requests
 
-top_db_count = 10   # user can change the count to get that many top databases
+top_db_count = 20   # user can change the count to get that many top databases
 
 #===========================getting database names ======================================
 
@@ -50,18 +50,28 @@ df['Features'] = df_list_features_names['Features']
 
 count = 1
 
-while count != top_db_count+1:
+while count != top_db_count+1:       #outer while loop to loop over defined top databases
     db_name = df.columns[count]
+    databse_name = df.columns[count]
     db_name = db_name.replace(" ", "+")
     df_list_features_values = pd.read_html('https://db-engines.com/en/system/'+db_name)
-    df_list_features_values = df_list_features_values[3]
-    df_list_features_values = df_list_features_values.iloc[2:35, 1]
-    df_list_features_values = df_list_features_values.to_frame()
-    df_list_features_values.columns = [df.columns[count]]
-    df_list_features_values.reset_index(drop=True, inplace=True)
-    df[df.columns[count]] = df_list_features_values[df.columns[count]]
+    df_list_features_db = df_list_features_values[3]
+
+    feature = 0
+    while feature != 33:            #inner while loop to get only features which are present for that particular database.Feature which are not present are filled with null.
+        boolean_finding = df_list_features_db[0].str.match(df['Features'][feature]).any()
+        if (boolean_finding):
+           index = df_list_features_db[df_list_features_db[0] == df['Features'][feature]].index.item()
+           df[databse_name][feature] = df_list_features_db[1][index]
+        else:
+            df[databse_name][feature] = ""
+
+        feature += 1
+
     count = count + 1
 
+
+#======================================== Writing dataframe to csv file ======================
 
 df.to_csv('databaseFeatures.csv')
 

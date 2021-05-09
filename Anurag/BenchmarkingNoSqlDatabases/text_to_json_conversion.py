@@ -84,7 +84,7 @@ def text_to_json_Relationship_table():
 
     relationship_data = []
 
-    with open('../orientdb/soc-pokec-relationships.txt', 'r', encoding="utf8") as data:
+    with open('soc-pokec-relationships.txt', 'r', encoding="utf8") as data:
         for line in data:
             line = line.strip('\n')
             ldata = line.split('\t')

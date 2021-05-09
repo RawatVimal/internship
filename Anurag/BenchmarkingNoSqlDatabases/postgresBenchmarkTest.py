@@ -1,13 +1,5 @@
-import pymongo
-import pprint
-import json, sys
-import pandas as pd
-import csv
-from pymongo import MongoClient
-import datetime
+import json
 import psycopg2 as psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT # <-- ADD THIS LINE
-from psycopg2 import sql
 
 ###Check connection
 
@@ -47,14 +39,8 @@ def create_tables():
                 ' computers_internet text, education text, sport text, movies text, travelling text, health text,' \
                 ' companies_brands text, more text ); CREATE TABLE relations (_from text, _to text);'
 
-
-        init_time = datetime.datetime.now()
         cur.execute(query)
-        end_time = datetime.datetime.now()
-        exec_time =  end_time - init_time
-        print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
-        # close communication with the PostgreSQL database server
+       # close communication with the PostgreSQL database server
 
         cur.close()
 
@@ -74,18 +60,13 @@ def create_tables():
 
 
 
-def drop_tables(table_name):
+def drop_database():
 
     try:
         conn = create_connection();
         cur = conn.cursor()
-        query = "DROP TABLE " + table_name + ';'
-
-        init_time = datetime.datetime.now()
+        query = 'DROP DATABASE test;'
         cur.execute(query)
-        end_time = datetime.datetime.now()
-        exec_time = end_time - init_time
-        print('exec_time = {} Microseconds '.format( exec_time.microseconds))
 
         # close communication with the PostgreSQL database server
 
@@ -106,6 +87,32 @@ def drop_tables(table_name):
             conn.close()
 
 
+def drop_tables(table_name):
+    try:
+        conn = create_connection();
+        cur = conn.cursor()
+        query = "DROP TABLE " + table_name + ';'
+
+        cur.execute(query)
+
+        # close communication with the PostgreSQL database server
+
+        cur.close()
+
+        # commit the changes
+
+        conn.commit()
+
+    except(Exception, psycopg2.DatabaseError) as error:
+
+        print(error)
+
+    finally:
+
+        if conn is not None:
+            conn.close()
+
+
 def Insert_INTO_profiles_table():
 
     try:
@@ -114,29 +121,20 @@ def Insert_INTO_profiles_table():
             data = json.load(json_data)
             query_sql = """ insert into profiles
                     select * from json_populate_recordset(NULL::profiles, %s) """
-
             conn = create_connection();
             cur = conn.cursor()
-
-            init_time = datetime.datetime.now()
             cur.execute(query_sql, (json.dumps(data),))
-            end_time = datetime.datetime.now()
-            exec_time =  end_time - init_time
-            print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
             conn.commit()
 
             print ('\nfinished INSERT INTO execution')
             cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
-
         print(error)
 
     finally:
 
         if conn is not None:
-
             conn.close()
 
 
@@ -151,15 +149,8 @@ def Insert_INTO_relations_table():
 
             conn = create_connection();
             cur = conn.cursor()
-
-            init_time = datetime.datetime.now()
             cur.execute(query_sql, (json.dumps(data),))
-            end_time = datetime.datetime.now()
-            exec_time =  end_time - init_time
-            print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
             conn.commit()
-
             print ('\nfinished INSERT INTO execution')
             cur.close()
 
@@ -173,26 +164,41 @@ def Insert_INTO_relations_table():
 
             conn.close()
 
-def Read_profiles_table():
+def singleRead():
 
     try:
-        select_profiles_query = "SELECT * FROM profiles"
+        select_profiles_query = "SELECT * FROM profiles WHERE user_id = '1'"
         conn = create_connection();
         cur = conn.cursor()
-
-        init_time = datetime.datetime.now()
         cur.execute(select_profiles_query)
-        end_time = datetime.datetime.now()
-        exec_time =  end_time - init_time
-        print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
         profiles = cur.fetchall()
 
-        print("Table contents after insertion ::")
+        print("Profile of user id 1 ::")
 
 
         print(profiles)
 
+        cur.close()
+
+    except (Exception, psycopg2.DatabaseError) as error:
+
+        print(error)
+
+    finally:
+
+        if conn is not None:
+
+            conn.close()
+
+
+def singleWrite():
+
+    try:
+        select_profiles_query = "INSERT INTO profiles (user_id, AGE) VALUES (%s,%s)"
+        record_to_insert = ('5320', '23')
+        conn = create_connection();
+        cur = conn.cursor()
+        cur.execute(select_profiles_query,record_to_insert)
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -212,18 +218,10 @@ def Read_relationship_table():
         select_relationship_query = "SELECT * FROM relations"
         conn = create_connection();
         cur = conn.cursor()
-
-        init_time = datetime.datetime.now()
         cur.execute(select_relationship_query)
-        end_time = datetime.datetime.now()
-        exec_time =  end_time - init_time
-        print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
         relations = cur.fetchall()
 
         print("Table contents after insertion ::")
-
-
         print(relations)
 
         cur.close()
@@ -245,13 +243,7 @@ def aggregate():
         aggregate_query = "select AGE, count(*) from profiles group by AGE"
         conn = create_connection()
         cur = conn.cursor()
-
-        init_time = datetime.datetime.now()
         cur.execute(aggregate_query)
-        end_time = datetime.datetime.now()
-        exec_time =  end_time - init_time
-        print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
         age = cur.fetchall()
 
         print("Aggregate of AGE ::")
@@ -273,16 +265,10 @@ def aggregate():
 def neighbors():
 
     try:
-        neighbors_query = "SELECT DISTINCT _to FROM relations WHERE _from = '1' limit 100"
+        neighbors_query = "SELECT DISTINCT _to FROM relations WHERE _from = '1'"
         conn = create_connection()
         cur = conn.cursor()
-
-        init_time = datetime.datetime.now()
         cur.execute(neighbors_query)
-        end_time = datetime.datetime.now()
-        exec_time =  end_time - init_time
-        print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
         relations = cur.fetchall()
 
         print("Neighbours of 1 ::")
@@ -310,13 +296,7 @@ def neighbors2():
                           " where _to != '15' and _from in (select  _to from relations where _from = '15')"
         conn = create_connection()
         cur = conn.cursor()
-
-        init_time = datetime.datetime.now()
         cur.execute(neighbors2_query)
-        end_time = datetime.datetime.now()
-        exec_time =  end_time - init_time
-        print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
         relations = cur.fetchall()
 
         print("Neighbours2 of 15 ::")
@@ -343,13 +323,7 @@ def neighbors2data():
                            " (select  _to from relations where _from = '20'))"
         conn = create_connection()
         cur = conn.cursor()
-
-        init_time = datetime.datetime.now()
         cur.execute(neighbors2data_query)
-        end_time = datetime.datetime.now()
-        exec_time =  end_time - init_time
-        print ('exec_time  = {} Microseconds '.format( exec_time.microseconds))
-
         relations = cur.fetchall()
 
         print("Neighbors2data of 20 ::")
@@ -372,23 +346,15 @@ def neighbors2data():
 if __name__ == "__main__":
 
     #create_tables()
-
     #drop_tables('profiles')
-
     #drop_tables('relations')
-
+    #drop_database()
     #Insert_INTO_profiles_table()
-
     #Insert_INTO_relations_table()
-
-    #Read_profiles_table()
-
+    singleRead()
+    #singleWrite()
     #Read_relationship_table()
-
     #neighbors()
-
-    neighbors2()
-
+    #neighbors2()
     #neighbors2data()
-
     #aggregate()

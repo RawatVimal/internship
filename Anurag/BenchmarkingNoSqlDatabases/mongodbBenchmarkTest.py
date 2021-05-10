@@ -1,6 +1,10 @@
 import datetime
 import json
+import os
+import time
+
 from pymongo import MongoClient
+import psutil
 
 
 #------------- Create db connection and create database ----------------------------
@@ -125,12 +129,15 @@ def singleRead():
     myclient = create_connection()
     db = myclient.test
     mycol = db.profiles
+    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
     x = mycol.find_one()
     end_time = datetime.datetime.now()
     execTime = (end_time - start_time).total_seconds() * 1000
     print(x)
     print("Query execution time = %s Milliseconds"%execTime)
+    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     myclient.close()
 
 def singleWrite():
@@ -139,18 +146,23 @@ def singleWrite():
     mycol = db.profiles
     with open('soc-pokec-profiles500.json',errors='ignore') as json_data:
         data = json.load(json_data)
+    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
     mycol.insert_one(data[400])
     end_time = datetime.datetime.now()
     execTime = (end_time - start_time).total_seconds() * 1000
     print("Query execution time = %s Milliseconds" % execTime)
+    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     myclient.close()
 
 def aggregate():
     myclient = create_connection()
     db = myclient.test
     mycol = db.profiles
+    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
+
     aggregate_result = mycol.aggregate([{
                                         "$group":
                                             {
@@ -161,23 +173,32 @@ def aggregate():
     end_time = datetime.datetime.now()
     execTime = (end_time - start_time).total_seconds() * 1000
 
+
     for i in aggregate_result:
         print(i)
     print("Query execution time = %s Milliseconds" % execTime)
+    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+
     myclient.close()
 
 def neighbors():
     myclient = create_connection()
     db = myclient.test
     mycol = db.relations
+    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
+
     record = mycol.find({"_from" : '1'},{"_to": 1})
+
     end_time = datetime.datetime.now()
     execTime = (end_time - start_time).total_seconds() * 1000
     print("Neighbors of user_id = 1 are:")
     for doc in record:
         print(doc)
     print("Query execution time = %s Milliseconds" % execTime)
+    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     myclient.close()
 
 def neighbors2():
@@ -189,15 +210,17 @@ def neighbors2():
     #             " distinct select _to from relations where _to != '15' " \
     #             "and" \
     #             " _from in (select  _to from relations where _from = '15')"
-
+    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
     #result of IN operator
     array = mycol.find({"_from" : '15'},{"_to" : 1,"_id":0})
     list_IN = []
+
     for x in array :
         list_IN.append(x["_to"])
     record = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  '15' }  },{ "_from" :  '15'}] },
                                     {"_from": {"$in": list_IN}}]},{"_to": 1 })
+
 
     end_time = datetime.datetime.now()
     execTime = (end_time - start_time).total_seconds() * 1000
@@ -205,6 +228,8 @@ def neighbors2():
     for doc in record:
         print(doc)
     print("Query execution time = %s Milliseconds" % execTime)
+    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     myclient.close()
 
 
@@ -224,6 +249,7 @@ def neighbors2data():
     list_IN = []
     for x in array :
         list_IN.append(x["_to"])
+    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
     innerQuery = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  '20' }  },{ "_from" :  '20'}] },
                                     {"_from": {"$in": list_IN}}]},{"_to": 1 })
@@ -240,8 +266,16 @@ def neighbors2data():
     print("Profiles of neighbors of user_id = 20 are:")
     for doc in mainQuery:
        print(doc)
+
     print("Query execution time = %s Milliseconds" % execTime)
+    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     myclient.close()
+
+def calculateCPUandMemoryUsage(pid):
+    process = psutil.Process(pid)
+    cpuMemoryList = [process.cpu_percent(interval=0.1),process.memory_percent()]
+    return cpuMemoryList
 
 if __name__ == "__main__":
     #createDB()
@@ -253,13 +287,14 @@ if __name__ == "__main__":
     #readRelationsCollection()
     #dropProfilesCollection()
     #dropRelationsCollection()
-    dropDatabase()
+    #dropDatabase()
     #singleRead()
-    #singleWrite()
+    singleWrite()
     #aggregate()
     #neighbors()
     #neighbors2()
     #neighbors2data()
+    #loo()
 
 
 

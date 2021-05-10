@@ -1,3 +1,4 @@
+import os
 import click
 import functools
 import js2py
@@ -46,11 +47,14 @@ def performance(**kwargs):
             neo4jBenchmarkTest.neighbors2data()
         elif query == "shortestPath":
             exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
             for i in range(number):
                 exec_time = neo4jBenchmarkTest.shortestPath()
                 exec_time_list.append(exec_time)
             avg_exec_time = sum(exec_time_list) / len(exec_time_list)
             print("Average execution time by running the query %s times is: %s milliseconds"%(number,avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     elif database == "postgres":
         if query == "singleRead":
             postgresBenchmarkTest.singleRead()

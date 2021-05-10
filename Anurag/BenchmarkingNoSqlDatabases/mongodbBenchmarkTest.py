@@ -1,3 +1,4 @@
+import datetime
 import json
 from pymongo import MongoClient
 
@@ -13,8 +14,8 @@ def create_connection():
     try:
         conn_string = "mongodb://"+username+":"+password+"@"+host_address+":"+port_no+"/" # <----enter username,pwd,host address and port no accordingly
         myclient = MongoClient(conn_string)
-        print("Connected successfully!!!")
-        print(myclient)
+        #print("Connected successfully!!!")
+        #print(myclient)
     except:
         print("Could not connect to MongoDB")
 
@@ -35,14 +36,14 @@ def createProfileCollection():
     myclient = create_connection()
     db = myclient.test
     profilesCollection = db["profiles"]
-    print(db)
+    #print(db)
     myclient.close()
 
 def createRelationsCollection():
     myclient = create_connection()
     db = myclient.test
     relationsCollection = db["relations"]
-    print(db)
+    #print(db)
     myclient.close()
 
 def insertIntoProfilesCollection():
@@ -103,7 +104,7 @@ def dropProfilesCollection():
     db = myclient.test
     mycol = db.profiles
     mycol.drop()
-    print("profiles connection has been deleted.")
+    #print("profiles connection has been deleted.")
     myclient.close()
 
 def dropRelationsCollection():
@@ -111,21 +112,25 @@ def dropRelationsCollection():
     db = myclient.test
     mycol = db.relations
     mycol.drop()
-    print("relations connection has been deleted.")
+    #print("relations connection has been deleted.")
     myclient.close()
 
 def dropDatabase():
     myclient = create_connection()
     myclient.drop_database('test')
-    print("Test database has been deleted.")
+    #print("Test database has been deleted.")
     myclient.close()
 
 def singleRead():
     myclient = create_connection()
     db = myclient.test
     mycol = db.profiles
+    start_time = datetime.datetime.now()
     x = mycol.find_one()
+    end_time = datetime.datetime.now()
+    execTime = (end_time - start_time).total_seconds() * 1000
     print(x)
+    print("Query execution time = %s Milliseconds"%execTime)
     myclient.close()
 
 def singleWrite():
@@ -134,13 +139,18 @@ def singleWrite():
     mycol = db.profiles
     with open('soc-pokec-profiles500.json',errors='ignore') as json_data:
         data = json.load(json_data)
+    start_time = datetime.datetime.now()
     mycol.insert_one(data[400])
+    end_time = datetime.datetime.now()
+    execTime = (end_time - start_time).total_seconds() * 1000
+    print("Query execution time = %s Milliseconds" % execTime)
     myclient.close()
 
 def aggregate():
     myclient = create_connection()
     db = myclient.test
     mycol = db.profiles
+    start_time = datetime.datetime.now()
     aggregate_result = mycol.aggregate([{
                                         "$group":
                                             {
@@ -148,22 +158,26 @@ def aggregate():
                                                 "Aggregate Age" : {"$sum":1}
                                             }
                                         }])
-
+    end_time = datetime.datetime.now()
+    execTime = (end_time - start_time).total_seconds() * 1000
 
     for i in aggregate_result:
         print(i)
+    print("Query execution time = %s Milliseconds" % execTime)
     myclient.close()
 
 def neighbors():
     myclient = create_connection()
     db = myclient.test
     mycol = db.relations
-
+    start_time = datetime.datetime.now()
     record = mycol.find({"_from" : '1'},{"_to": 1})
-
+    end_time = datetime.datetime.now()
+    execTime = (end_time - start_time).total_seconds() * 1000
+    print("Neighbors of user_id = 1 are:")
     for doc in record:
         print(doc)
-
+    print("Query execution time = %s Milliseconds" % execTime)
     myclient.close()
 
 def neighbors2():
@@ -176,7 +190,7 @@ def neighbors2():
     #             "and" \
     #             " _from in (select  _to from relations where _from = '15')"
 
-
+    start_time = datetime.datetime.now()
     #result of IN operator
     array = mycol.find({"_from" : '15'},{"_to" : 1,"_id":0})
     list_IN = []
@@ -185,9 +199,12 @@ def neighbors2():
     record = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  '15' }  },{ "_from" :  '15'}] },
                                     {"_from": {"$in": list_IN}}]},{"_to": 1 })
 
-
+    end_time = datetime.datetime.now()
+    execTime = (end_time - start_time).total_seconds() * 1000
+    print("Immediate and first level neighbors of user_id = 15 are:")
     for doc in record:
         print(doc)
+    print("Query execution time = %s Milliseconds" % execTime)
     myclient.close()
 
 
@@ -207,6 +224,7 @@ def neighbors2data():
     list_IN = []
     for x in array :
         list_IN.append(x["_to"])
+    start_time = datetime.datetime.now()
     innerQuery = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  '20' }  },{ "_from" :  '20'}] },
                                     {"_from": {"$in": list_IN}}]},{"_to": 1 })
     list_inner_query = []
@@ -217,9 +235,12 @@ def neighbors2data():
     mycol_profiles = db.profiles
     mainQuery = mycol_profiles.find({"user_id":{"$in" : list_inner_query}})
 
-    #for doc in mainQuery:
-     #   print(doc)
-
+    end_time = datetime.datetime.now()
+    execTime = (end_time - start_time).total_seconds() * 1000
+    print("Profiles of neighbors of user_id = 20 are:")
+    for doc in mainQuery:
+       print(doc)
+    print("Query execution time = %s Milliseconds" % execTime)
     myclient.close()
 
 if __name__ == "__main__":

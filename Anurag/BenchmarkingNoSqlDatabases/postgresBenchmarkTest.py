@@ -1,3 +1,4 @@
+import datetime
 import json
 import psycopg2 as psycopg2
 
@@ -170,14 +171,17 @@ def singleRead():
         select_profiles_query = "SELECT * FROM profiles WHERE user_id = '1'"
         conn = create_connection();
         cur = conn.cursor()
+        start_time = datetime.datetime.now()
+
         cur.execute(select_profiles_query)
+
+        end_time = datetime.datetime.now()
+        execTime = (end_time - start_time).total_seconds() * 1000
         profiles = cur.fetchall()
 
         print("Profile of user id 1 ::")
-
-
         print(profiles)
-
+        print("Query execution time = %s Milliseconds" % execTime)
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -198,7 +202,13 @@ def singleWrite():
         record_to_insert = ('5320', '23')
         conn = create_connection();
         cur = conn.cursor()
+        start_time = datetime.datetime.now()
+
         cur.execute(select_profiles_query,record_to_insert)
+
+        end_time = datetime.datetime.now()
+        execTime = (end_time - start_time).total_seconds() * 1000
+        print("Query execution time = %s Milliseconds" % execTime)
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -218,11 +228,16 @@ def Read_relationship_table():
         select_relationship_query = "SELECT * FROM relations"
         conn = create_connection();
         cur = conn.cursor()
-        cur.execute(select_relationship_query)
-        relations = cur.fetchall()
+        start_time = datetime.datetime.now()
 
+        cur.execute(select_relationship_query)
+
+        end_time = datetime.datetime.now()
+        execTime = (end_time - start_time).total_seconds() * 1000
+        relations = cur.fetchall()
         print("Table contents after insertion ::")
         print(relations)
+        print("Query execution time = %s Milliseconds" % execTime)
 
         cur.close()
 
@@ -243,13 +258,17 @@ def aggregate():
         aggregate_query = "select AGE, count(*) from profiles group by AGE"
         conn = create_connection()
         cur = conn.cursor()
+        start_time = datetime.datetime.now()
+
         cur.execute(aggregate_query)
+
+        end_time = datetime.datetime.now()
+        execTime = (end_time - start_time).total_seconds() * 1000
         age = cur.fetchall()
 
         print("Aggregate of AGE ::")
-
         print(age)
-
+        print("Query execution time = %s Milliseconds" % execTime)
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -268,14 +287,17 @@ def neighbors():
         neighbors_query = "SELECT DISTINCT _to FROM relations WHERE _from = '1'"
         conn = create_connection()
         cur = conn.cursor()
+        start_time = datetime.datetime.now()
+
         cur.execute(neighbors_query)
+
+        end_time = datetime.datetime.now()
+        execTime = (end_time - start_time).total_seconds() * 1000
         relations = cur.fetchall()
 
-        print("Neighbours of 1 ::")
-
-
+        print("Neighbors of user_id = 1 are:")
         print(relations)
-
+        print("Query execution time = %s Milliseconds" % execTime)
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -296,13 +318,17 @@ def neighbors2():
                           " where _to != '15' and _from in (select  _to from relations where _from = '15')"
         conn = create_connection()
         cur = conn.cursor()
+        start_time = datetime.datetime.now()
+
         cur.execute(neighbors2_query)
+
+        end_time = datetime.datetime.now()
+        execTime = (end_time - start_time).total_seconds() * 1000
         relations = cur.fetchall()
 
-        print("Neighbours2 of 15 ::")
-
+        print("Immediate and first level neighbors of user_id = 15 are:")
         print(relations)
-
+        print("Query execution time = %s Milliseconds" % execTime)
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -323,13 +349,17 @@ def neighbors2data():
                            " (select  _to from relations where _from = '20'))"
         conn = create_connection()
         cur = conn.cursor()
+        start_time = datetime.datetime.now()
+
         cur.execute(neighbors2data_query)
+
+        end_time = datetime.datetime.now()
+        execTime = (end_time - start_time).total_seconds() * 1000
         relations = cur.fetchall()
 
-        print("Neighbors2data of 20 ::")
-
+        print("Profiles of neighbors of user_id = 20 are:")
         print(relations)
-
+        print("Query execution time = %s Milliseconds" % execTime)
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:

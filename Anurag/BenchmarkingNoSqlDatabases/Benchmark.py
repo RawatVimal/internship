@@ -17,7 +17,9 @@ def common_options(f):
         click.option('--query', '-q', type=click.Choice(
             ['singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'],
             case_sensitive=True),
-                     help="chose one query from one of the following: 'singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'")
+                     help="chose one query from one of the following: 'singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'"),
+        click.option('--number', '-n', type=int,
+                     help="only for shortest path query!!!! Choose how many times you want to run the query.")
     ]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
@@ -27,6 +29,7 @@ def performance(**kwargs):
 
     database = kwargs["database"]
     query = kwargs["query"]
+    number = kwargs["number"]
 
     if database == "neo4j":
         if query == "singleRead":
@@ -42,7 +45,12 @@ def performance(**kwargs):
         elif query == "neighbors2data":
             neo4jBenchmarkTest.neighbors2data()
         elif query == "shortestPath":
-            neo4jBenchmarkTest.shortestPath()
+            exec_time_list = []
+            for i in range(number):
+                exec_time = neo4jBenchmarkTest.shortestPath()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds"%(number,avg_exec_time))
     elif database == "postgres":
         if query == "singleRead":
             postgresBenchmarkTest.singleRead()

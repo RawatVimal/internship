@@ -13,14 +13,14 @@ def common_options(f):
         click.option('--database', '-d', type=click.Choice(
             ['mongodb', 'neo4j', 'postgres'],
             case_sensitive=True),
-                     help="chose Database names from one of the following: 'mongodb', 'neo4j', 'postgres'"),
+                     help="Choose Database names from one of the following: 'mongodb', 'neo4j', 'postgres'"),
 
         click.option('--query', '-q', type=click.Choice(
             ['singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'],
             case_sensitive=True),
-                     help="chose one query from one of the following: 'singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'"),
+                     help="Choose one query from one of the following: 'singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'"),
         click.option('--number', '-n', type=int,
-                     help="only for shortest path query!!!! Choose how many times you want to run the query.")
+                     help="Choose how many times you want to run the query.")
     ]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
@@ -34,17 +34,65 @@ def performance(**kwargs):
 
     if database == "neo4j":
         if query == "singleRead":
-            neo4jBenchmarkTest.singleRead()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = neo4jBenchmarkTest.singleRead()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "singleWrite":
-            neo4jBenchmarkTest.singleWrite()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = neo4jBenchmarkTest.singleWrite()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "aggregate":
-            neo4jBenchmarkTest.aggregate()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = neo4jBenchmarkTest.aggregate()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors":
-            neo4jBenchmarkTest.neighbors()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = neo4jBenchmarkTest.neighbors()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors2":
-            neo4jBenchmarkTest.neighbors2()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = neo4jBenchmarkTest.neighbors2()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors2data":
-            neo4jBenchmarkTest.neighbors2data()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = neo4jBenchmarkTest.neighbors2data()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds"%(number,avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "shortestPath":
             exec_time_list = []
             cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
@@ -57,30 +105,126 @@ def performance(**kwargs):
             print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     elif database == "postgres":
         if query == "singleRead":
-            postgresBenchmarkTest.singleRead()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = postgresBenchmarkTest.singleRead()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "singleWrite":
-            postgresBenchmarkTest.singleWrite()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = postgresBenchmarkTest.singleWrite()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "aggregate":
-            postgresBenchmarkTest.aggregate()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = postgresBenchmarkTest.aggregate()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors":
-            postgresBenchmarkTest.neighbors()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = postgresBenchmarkTest.neighbors()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors2":
-            postgresBenchmarkTest.neighbors2()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = postgresBenchmarkTest.neighbors2()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors2data":
-            postgresBenchmarkTest.neighbors2data()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = postgresBenchmarkTest.neighbors2data()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     elif database == "mongodb":
         if query == "singleRead":
-            mongodbBenchmarkTest.singleRead()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = mongodbBenchmarkTest.singleRead()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "singleWrite":
-            mongodbBenchmarkTest.singleWrite()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = mongodbBenchmarkTest.singleWrite()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "aggregate":
-            mongodbBenchmarkTest.aggregate()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = mongodbBenchmarkTest.aggregate()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors":
-            mongodbBenchmarkTest.neighbors()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = mongodbBenchmarkTest.neighbors()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors2":
-            mongodbBenchmarkTest.neighbors2()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = mongodbBenchmarkTest.neighbors2()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "neighbors2data":
-            mongodbBenchmarkTest.neighbors2data()
+            exec_time_list = []
+            cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            for i in range(number):
+                exec_time = mongodbBenchmarkTest.neighbors2data()
+                exec_time_list.append(exec_time)
+            avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+            print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
+            print(f"CPU used = {cpuMemoryList[0]:.4f}%")
+            print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
 
 
 

@@ -7,6 +7,7 @@ import os
 
 def downloadDataset():
 
+    print("Downloading pokec dataset started..")
     url1 = "https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz"
     file_name1 = re.split(pattern='/', string=url1)[-1]
     r1 = request.urlretrieve(url=url1, filename=file_name1)
@@ -29,6 +30,8 @@ def downloadDataset():
             shutil.copyfileobj(f_in, f_out)
 
     os.remove("soc-pokec-profiles.txt.gz")
+
+    print("Downloading pokec dataset finished..")
 
 if __name__ == "__main__":
 

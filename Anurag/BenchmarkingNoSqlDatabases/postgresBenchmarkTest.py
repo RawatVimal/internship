@@ -3,7 +3,7 @@ import json
 import os
 
 import psycopg2 as psycopg2
-import mongodbBenchmarkTest
+import mongodbBenchmarkTest,neo4jBenchmarkTest
 
 ###Check connection
 
@@ -19,7 +19,7 @@ def create_connection():
 
                            password='secret')
 
-    print(conn)
+    #print(conn)
     return conn
 
 
@@ -29,23 +29,25 @@ def create_tables():
     try:
         conn = create_connection();
         cur = conn.cursor()
-        query = 'CREATE TABLE profiles (user_id INTEGER PRIMARY KEY, public text, completion_percentage text, gender text, AGE INTEGER, ' \
-                'eye_color text, hair_color text, hair_type text, sign_in_zodiac text, region text, last_login text,' \
-                ' registration text, body text, I_am_working_in_field text, I_most_enjoy_good_food text, hobbies text,' \
-                ' spoken_languages text, pets text, body_type text, my_eyesight text, completed_level_of_education text,' \
-                ' favourite_color text, relation_to_smoking text, relation_to_alcohol text, on_pokec_i_am_looking_for text,' \
-                ' love_is_for_me text, relation_to_casual_sex text, my_partner_should_be text, marital_status text,' \
-                ' children text, relation_to_children text, I_like_movies text, I_like_watching_movie text,' \
-                ' I_like_music text, I_mostly_like_listening_to_music text, the_idea_of_good_evening text,' \
-                ' I_like_specialties_from_kitchen text, fun text, I_am_going_to_concerts text, my_active_sports text,' \
-                ' my_passive_sports text, profession text, I_like_books text, life_style text, music text, cars text,' \
-                ' politics text, relationships text, art_culture text, hobbies_interests text, science_technologies text,' \
-                ' computers_internet text, education text, sport text, movies text, travelling text, health text,' \
-                ' companies_brands text, more text ); CREATE TABLE relations (_from text, _to text);'
+        with open('data.json', errors='ignore') as json_data:
+            data = json.load(json_data)
+        columnData = list(data[0].keys())
+        queryData = "CREATE TABLE profiles ( " + columnData[0] + " INTEGER PRIMARY KEY"
+        for i in range((len(columnData))-1):
+            queryData = queryData + "," + columnData[i+1] + " text"
+        queryData = queryData + ");"
 
-        cur.execute(query)
-       # close communication with the PostgreSQL database server
+        cur.execute(queryData)
 
+        with open('relations.json', errors='ignore') as json_data:
+            data = json.load(json_data)
+        columnData = list(data[0].keys())
+        queryRelations = "CREATE TABLE relations ( " + columnData[0] + " text," + columnData[1] + " text );"
+
+
+        cur.execute(queryRelations)
+
+        # close communication with the PostgreSQL database server
         cur.close()
 
         # commit the changes
@@ -121,7 +123,7 @@ def Insert_INTO_profiles_table():
 
     try:
         #use Python's open() function to load the JSON data
-        with open('soc-pokec-profiles500.json',errors='ignore') as json_data:
+        with open('data.json',errors='ignore') as json_data:
             data = json.load(json_data)
             query_sql = """ insert into profiles
                     select * from json_populate_recordset(NULL::profiles, %s) """
@@ -130,7 +132,7 @@ def Insert_INTO_profiles_table():
             cur.execute(query_sql, (json.dumps(data),))
             conn.commit()
 
-            print ('\nfinished INSERT INTO execution')
+            #print ('\nfinished INSERT INTO profiles table')
             cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -146,7 +148,7 @@ def Insert_INTO_relations_table():
 
     try:
         #use Python's open() function to load the JSON data
-        with open('soc-pokec-relationship5000.json',errors='ignore') as json_data:
+        with open('relations.json',errors='ignore') as json_data:
             data = json.load(json_data)
             query_sql = """ insert into relations
                     select * from json_populate_recordset(NULL::relations, %s) """
@@ -155,7 +157,7 @@ def Insert_INTO_relations_table():
             cur = conn.cursor()
             cur.execute(query_sql, (json.dumps(data),))
             conn.commit()
-            print ('\nfinished INSERT INTO execution')
+            #print ('\nfinished INSERT INTO relations table')
             cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -171,24 +173,22 @@ def Insert_INTO_relations_table():
 def singleRead():
 
     try:
-        select_profiles_query = "SELECT * FROM profiles WHERE user_id = '1'"
+        randomUserIDList = neo4jBenchmarkTest.createUserIDList()
+        select_profiles_query = "SELECT * FROM profiles WHERE user_id = '%s'"%(randomUserIDList[0])
         conn = create_connection();
         cur = conn.cursor()
-        cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
         start_time = datetime.datetime.now()
 
         cur.execute(select_profiles_query)
 
         end_time = datetime.datetime.now()
-        execTime = (end_time - start_time).total_seconds() * 1000
         profiles = cur.fetchall()
 
-        print("Profile of user id 1 ::")
-        print(profiles)
-        print("Query execution time = %s Milliseconds" % execTime)
-        print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-        print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+        #print(f"Profile of user id {randomUserIDList[0]} ::")
+        #print(profiles)
         cur.close()
+
+        return (end_time - start_time).total_seconds() * 1000
 
     except (Exception, psycopg2.DatabaseError) as error:
 
@@ -208,17 +208,13 @@ def singleWrite():
         record_to_insert = ('5320', '23')
         conn = create_connection();
         cur = conn.cursor()
-        cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
         start_time = datetime.datetime.now()
 
         cur.execute(select_profiles_query,record_to_insert)
 
         end_time = datetime.datetime.now()
-        execTime = (end_time - start_time).total_seconds() * 1000
-        print("Query execution time = %s Milliseconds" % execTime)
-        print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-        print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         cur.close()
+        return (end_time - start_time).total_seconds() * 1000
 
     except (Exception, psycopg2.DatabaseError) as error:
 
@@ -271,21 +267,16 @@ def aggregate():
         aggregate_query = "select AGE, count(*) from profiles group by AGE"
         conn = create_connection()
         cur = conn.cursor()
-        cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
         start_time = datetime.datetime.now()
 
         cur.execute(aggregate_query)
 
         end_time = datetime.datetime.now()
-        execTime = (end_time - start_time).total_seconds() * 1000
         age = cur.fetchall()
-
-        print("Aggregate of AGE ::")
-        print(age)
-        print("Query execution time = %s Milliseconds" % execTime)
-        print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-        print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+        #print("Aggregate of AGE ::")
+        #print(age)
         cur.close()
+        return (end_time - start_time).total_seconds() * 1000
 
     except (Exception, psycopg2.DatabaseError) as error:
 
@@ -300,24 +291,21 @@ def aggregate():
 def neighbors():
 
     try:
-        neighbors_query = "SELECT DISTINCT _to FROM relations WHERE _from = '1'"
+        randomUserIDList = neo4jBenchmarkTest.createUserIDList()
+        neighbors_query = "SELECT DISTINCT _to FROM relations WHERE _from = '%s'"%(randomUserIDList[0])
         conn = create_connection()
         cur = conn.cursor()
-        cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
         start_time = datetime.datetime.now()
 
         cur.execute(neighbors_query)
 
         end_time = datetime.datetime.now()
-        execTime = (end_time - start_time).total_seconds() * 1000
         relations = cur.fetchall()
 
-        print("Neighbors of user_id = 1 are:")
-        print(relations)
-        print("Query execution time = %s Milliseconds" % execTime)
-        print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-        print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+        #print(f"Neighbors of user_id = {randomUserIDList[0]} are:")
+        #print(relations)
         cur.close()
+        return (end_time - start_time).total_seconds() * 1000
 
     except (Exception, psycopg2.DatabaseError) as error:
 
@@ -333,11 +321,11 @@ def neighbors():
 def neighbors2():
 
     try:
-        neighbors2_query = "select _to from relations where _from = '15' union distinct select _to from relations" \
-                          " where _to != '15' and _from in (select  _to from relations where _from = '15')"
+        randomUserIDList = neo4jBenchmarkTest.createUserIDList()
+        neighbors2_query = "select _to from relations where _from = '%s' union distinct select _to from relations" \
+                          " where _to != '%s' and _from in (select  _to from relations where _from = '%s')"%(randomUserIDList[0],randomUserIDList[0],randomUserIDList[0])
         conn = create_connection()
         cur = conn.cursor()
-        cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
         start_time = datetime.datetime.now()
 
         cur.execute(neighbors2_query)
@@ -346,12 +334,10 @@ def neighbors2():
         execTime = (end_time - start_time).total_seconds() * 1000
         relations = cur.fetchall()
 
-        print("Immediate and first level neighbors of user_id = 15 are:")
-        print(relations)
-        print("Query execution time = %s Milliseconds" % execTime)
-        print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-        print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+        #print(f"Immediate and first level neighbors of user_id = {randomUserIDList[0]} are:")
+        #print(relations)
         cur.close()
+        return (end_time - start_time).total_seconds() * 1000
 
     except (Exception, psycopg2.DatabaseError) as error:
 
@@ -366,26 +352,23 @@ def neighbors2():
 def neighbors2data():
 
     try:
-        neighbors2data_query = "select * from profiles where user_id::text IN (select _to from relations where _from = '20' union" \
-                           " distinct select _to from relations where _to != '20' and _from IN" \
-                           " (select  _to from relations where _from = '20'))"
+        randomUserIDList = neo4jBenchmarkTest.createUserIDList()
+        neighbors2data_query = "select * from profiles where user_id::text IN (select _to from relations where _from = '%s' union" \
+                           " distinct select _to from relations where _to != '%s' and _from IN" \
+                           " (select  _to from relations where _from = '%s'))"%(randomUserIDList[0],randomUserIDList[0],randomUserIDList[0])
         conn = create_connection()
         cur = conn.cursor()
-        cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
         start_time = datetime.datetime.now()
 
         cur.execute(neighbors2data_query)
 
         end_time = datetime.datetime.now()
-        execTime = (end_time - start_time).total_seconds() * 1000
         relations = cur.fetchall()
 
-        print("Profiles of neighbors of user_id = 20 are:")
-        print(relations)
-        print("Query execution time = %s Milliseconds" % execTime)
-        print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-        print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+        #print(f"Profiles of neighbors of user_id = {randomUserIDList[0]} are:")
+        #print(relations)
         cur.close()
+        return (end_time - start_time).total_seconds() * 1000
 
     except (Exception, psycopg2.DatabaseError) as error:
 

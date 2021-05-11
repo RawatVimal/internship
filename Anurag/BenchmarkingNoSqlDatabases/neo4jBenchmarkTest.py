@@ -27,7 +27,7 @@ def create_connection():
 
 
 def insertNodesIntoProfiles():
-    with open('soc-pokec-profiles500.json', errors='ignore') as json_data:
+    with open('data.json', errors='ignore') as json_data:
         data = json.load(json_data)
 
     driver = create_connection()
@@ -37,7 +37,7 @@ def insertNodesIntoProfiles():
 def createRelationships():
     driver = create_connection()
 
-    with open('soc-pokec-relationship5000.json', errors='ignore') as json_data:
+    with open('relations.json', errors='ignore') as json_data:
         data = json.load(json_data)
 
     _fromList =[d['_from'] for d in data]
@@ -74,95 +74,72 @@ def createUserIDList():
 def singleRead():
 
     driver = create_connection()
-    cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
 
     my_node = driver.evaluate('MATCH (a:profiles) RETURN a')
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print(my_node)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print(my_node)
+    return (end_time - start_time).total_seconds() * 1000
 
 def singleWrite():
     driver = create_connection()
-    cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
 
     write = driver.run('CREATE (n:profiles) SET n.user_id = 5420, n.AGE = 23')
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    return (end_time - start_time).total_seconds() * 1000
 
 def aggregate():
 
     driver = create_connection()
-    cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
 
     aggregate = driver.run('MATCH (x:profiles) RETURN sum(toInteger(x.AGE))')
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Aggregate AGE is : %s"%aggregate)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print("Aggregate AGE is : %s"%aggregate)
+    return (end_time - start_time).total_seconds() * 1000
 
 def neighbors():
 
     driver = create_connection()
-    cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+    randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
 
-    result = driver.run('MATCH (s:profiles {user_id:"1"})-->(n:profiles) RETURN n.user_id').to_table()
+    result = driver.run('MATCH (s:profiles {user_id:"%s"})-->(n:profiles) RETURN n.user_id'%(randomUserIDList[0])).to_table()
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Neighbors of user_id = 1 are:")
-    print(result)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print(f"Neighbors of user_id = {randomUserIDList[0]} are:")
+    #print(result)
+    return (end_time - start_time).total_seconds() * 1000
 
 def neighbors2():
 
     driver = create_connection()
-    cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+    randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
 
-    result = driver.run('MATCH (s:profiles {user_id:"15"})-[*1..2]->(n:profiles) RETURN DISTINCT n.user_id').to_table()
+    result = driver.run('MATCH (s:profiles {user_id:"%s"})-[*1..2]->(n:profiles) RETURN DISTINCT n.user_id'%(randomUserIDList[0])).to_table()
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Immediate and first level neighbors of user_id = 15 are:")
-    print(result)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print(f"Immediate and first level neighbors of user_id = {randomUserIDList[0]} are:")
+    #print(result)
+    return (end_time - start_time).total_seconds() * 1000
 
 def neighbors2data():
 
     driver = create_connection()
-    cpuMemoryList = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+    randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
 
-    result = driver.run('MATCH (s:profiles {user_id:"20"})-[*1..2]->(n:profiles) RETURN DISTINCT n.user_id, n').to_table()
+    result = driver.run('MATCH (s:profiles {user_id:"%s"})-[*1..2]->(n:profiles) RETURN DISTINCT n.user_id, n'%(randomUserIDList[0])).to_table()
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-
-    print("Profiles of neighbors of user_id = 20 are:")
-    print(result)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
-
+    #print(f"Profiles of neighbors of user_id = {randomUserIDList[0]} are:")
+    #print(result)
+    return (end_time - start_time).total_seconds() * 1000
 
 def shortestPath():
 
@@ -178,11 +155,11 @@ if __name__ == "__main__":
     #insertNodesIntoProfiles()
     #createRelationships()
     #deleteAllNodesAndRelationships()
-    #singleRead()
+    singleRead()
     #singleWrite()
     #aggregate()
     #neighbors()
-    neighbors2()
+    #neighbors2()
     #neighbors2data()
     #shortestPath()
     #createUserIDList()

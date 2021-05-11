@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 import time
-
+import neo4jBenchmarkTest
 from pymongo import MongoClient
 import psutil
 
@@ -55,7 +55,7 @@ def insertIntoProfilesCollection():
     db = myclient.test
     profileCol = db.profiles
     # Loading or Opening the json file
-    with open('soc-pokec-profiles500.json',errors='ignore') as json_data:
+    with open('data.json',errors='ignore') as json_data:
         data = json.load(json_data)
     # Inserting the loaded data in the Collection
     # if JSON contains data more than one entry
@@ -72,7 +72,7 @@ def insertIntoRelationsCollection():
     db = myclient.test
     relationsCol = db.relations
     # Loading or Opening the json file
-    with open('soc-pokec-relationship5000.json',errors='ignore') as json_data:
+    with open('relations.json',errors='ignore') as json_data:
         data = json.load(json_data)
     # Inserting the loaded data in the Collection
     # if JSON contains data more than one entry
@@ -129,38 +129,29 @@ def singleRead():
     myclient = create_connection()
     db = myclient.test
     mycol = db.profiles
-    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
     x = mycol.find_one()
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print(x)
-    print("Query execution time = %s Milliseconds"%execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print(x)
     myclient.close()
+    return (end_time - start_time).total_seconds() * 1000
 
 def singleWrite():
     myclient = create_connection()
     db = myclient.test
     mycol = db.profiles
-    with open('soc-pokec-profiles500.json',errors='ignore') as json_data:
+    with open('data.json',errors='ignore') as json_data:
         data = json.load(json_data)
-    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
     mycol.insert_one(data[400])
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
     myclient.close()
+    return (end_time - start_time).total_seconds() * 1000
 
 def aggregate():
     myclient = create_connection()
     db = myclient.test
     mycol = db.profiles
-    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
 
     aggregate_result = mycol.aggregate([{
@@ -171,35 +162,26 @@ def aggregate():
                                             }
                                         }])
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-
-
-    for i in aggregate_result:
-        print(i)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
-
+    #for i in aggregate_result:
+    #    print(i)
     myclient.close()
+    return (end_time - start_time).total_seconds() * 1000
 
 def neighbors():
     myclient = create_connection()
     db = myclient.test
     mycol = db.relations
-    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
+    randomUserIDList = neo4jBenchmarkTest.createUserIDList()
     start_time = datetime.datetime.now()
 
-    record = mycol.find({"_from" : '1'},{"_to": 1})
+    record = mycol.find({"_from" : randomUserIDList[0]},{"_to": 1})
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Neighbors of user_id = 1 are:")
-    for doc in record:
-        print(doc)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print(f"Neighbors of user_id = {randomUserIDList[0]} are:")
+    #for doc in record:
+    #    print(doc)
     myclient.close()
+    return (end_time - start_time).total_seconds() * 1000
 
 def neighbors2():
     myclient = create_connection()
@@ -210,27 +192,24 @@ def neighbors2():
     #             " distinct select _to from relations where _to != '15' " \
     #             "and" \
     #             " _from in (select  _to from relations where _from = '15')"
-    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
+    randomUserIDList = neo4jBenchmarkTest.createUserIDList()
     start_time = datetime.datetime.now()
     #result of IN operator
-    array = mycol.find({"_from" : '15'},{"_to" : 1,"_id":0})
+    array = mycol.find({"_from" : randomUserIDList[0]},{"_to" : 1,"_id":0})
     list_IN = []
 
     for x in array :
         list_IN.append(x["_to"])
-    record = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  '15' }  },{ "_from" :  '15'}] },
+    record = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  randomUserIDList[0] }  },{ "_from" :  randomUserIDList[0]}] },
                                     {"_from": {"$in": list_IN}}]},{"_to": 1 })
 
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Immediate and first level neighbors of user_id = 15 are:")
-    for doc in record:
-        print(doc)
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print(f"Immediate and first level neighbors of user_id = {randomUserIDList[0]} are:")
+    #for doc in record:
+    #    print(doc)
     myclient.close()
+    return (end_time - start_time).total_seconds() * 1000
 
 
 def neighbors2data():
@@ -245,13 +224,13 @@ def neighbors2data():
 
 
     #result of IN operator
-    array = mycol.find({"_from" : '20'},{"_to" : 1,"_id":0})
+    randomUserIDList = neo4jBenchmarkTest.createUserIDList()
+    array = mycol.find({"_from" : randomUserIDList[0]},{"_to" : 1,"_id":0})
     list_IN = []
     for x in array :
         list_IN.append(x["_to"])
-    cpuMemoryList = calculateCPUandMemoryUsage(os.getpid())
     start_time = datetime.datetime.now()
-    innerQuery = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  '20' }  },{ "_from" :  '20'}] },
+    innerQuery = mycol.find({ "$and" : [{"$or": [{ "_to " : { "$ne":  randomUserIDList[0] }  },{ "_from" :  randomUserIDList[0]}] },
                                     {"_from": {"$in": list_IN}}]},{"_to": 1 })
     list_inner_query = []
     for x in innerQuery :
@@ -262,15 +241,11 @@ def neighbors2data():
     mainQuery = mycol_profiles.find({"user_id":{"$in" : list_inner_query}})
 
     end_time = datetime.datetime.now()
-    execTime = (end_time - start_time).total_seconds() * 1000
-    print("Profiles of neighbors of user_id = 20 are:")
-    for doc in mainQuery:
-       print(doc)
-
-    print("Query execution time = %s Milliseconds" % execTime)
-    print(f"CPU used = {cpuMemoryList[0]:.4f}%")
-    print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+    #print(f"Profiles of neighbors of user_id = {randomUserIDList[0]} are:")
+    #for doc in mainQuery:
+    #   print(doc)
     myclient.close()
+    return (end_time - start_time).total_seconds() * 1000
 
 def calculateCPUandMemoryUsage(pid):
     process = psutil.Process(pid)
@@ -285,11 +260,11 @@ if __name__ == "__main__":
     #insertIntoRelationsCollection()
     #readProfilesCollection()
     #readRelationsCollection()
-    #dropProfilesCollection()
-    #dropRelationsCollection()
-    #dropDatabase()
+    dropProfilesCollection()
+    dropRelationsCollection()
+    dropDatabase()
     #singleRead()
-    singleWrite()
+    #singleWrite()
     #aggregate()
     #neighbors()
     #neighbors2()

@@ -93,6 +93,7 @@ def drop_database():
             conn.close()
 
 
+
 def drop_tables(table_name):
     try:
         conn = create_connection();
@@ -119,6 +120,7 @@ def drop_tables(table_name):
             conn.close()
 
 
+
 def Insert_INTO_profiles_table():
 
     try:
@@ -143,6 +145,31 @@ def Insert_INTO_profiles_table():
         if conn is not None:
             conn.close()
 
+def create_database():
+
+    try:
+        conn = create_connection();
+        cur = conn.cursor()
+        query = 'CREATE DATABASE test;'
+        cur.execute(query)
+
+        # close communication with the PostgreSQL database server
+
+        cur.close()
+
+        # commit the changes
+
+        conn.commit()
+
+    except(Exception, psycopg2.DatabaseError) as error:
+
+        print(error)
+
+    finally:
+
+        if conn is not None:
+
+            conn.close()
 
 def Insert_INTO_relations_table():
 

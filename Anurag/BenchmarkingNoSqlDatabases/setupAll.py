@@ -12,6 +12,7 @@ if __name__ == "__main__":
 
     # setup postgres (create db and insert data)
     print("Setting up of postgres database and insertion of data started..")
+    postgresBenchmarkTest.create_database()
     postgresBenchmarkTest.create_tables()
     postgresBenchmarkTest.Insert_INTO_profiles_table()
     postgresBenchmarkTest.Insert_INTO_relations_table()
@@ -24,7 +25,7 @@ if __name__ == "__main__":
     mongodbBenchmarkTest.createRelationsCollection()
     mongodbBenchmarkTest.insertIntoProfilesCollection()
     mongodbBenchmarkTest.insertIntoRelationsCollection()
-    print("Setting up of mongodb database and insertion of data started..")
+    print("Setting up of mongodb database and insertion of data finished..")
 
     # setup neo4j (create db and insert data)
     print("Setting up of neo4j database and insertion of data started..")

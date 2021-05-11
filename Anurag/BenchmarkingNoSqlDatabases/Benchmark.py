@@ -16,7 +16,7 @@ def common_options(f):
                      help="Choose Database names from one of the following: 'mongodb', 'neo4j', 'postgres'"),
 
         click.option('--query', '-q', type=click.Choice(
-            ['singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath','deleteTables'],
+            ['singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath','deleteTables','insertIntoTables'],
             case_sensitive=True),
                      help="Choose one query from one of the following: 'singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'"),
         click.option('--number', '-n', type=int,
@@ -105,6 +105,9 @@ def performance(**kwargs):
             print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
         elif query == "deleteTables":
             neo4jBenchmarkTest.deleteAllNodesAndRelationships()
+        elif query == "insertIntoTables":
+            neo4jBenchmarkTest.insertNodesIntoProfiles()
+            neo4jBenchmarkTest.createRelationships()
     elif database == "postgres":
         if query == "singleRead":
             exec_time_list = []
@@ -169,6 +172,10 @@ def performance(**kwargs):
         elif query == "deleteTables":
             postgresBenchmarkTest.drop_tables("profiles")
             postgresBenchmarkTest.drop_tables("relations")
+        elif query == "insertIntoTables":
+            postgresBenchmarkTest.create_tables()
+            postgresBenchmarkTest.Insert_INTO_profiles_table()
+            postgresBenchmarkTest.Insert_INTO_relations_table()
     elif database == "mongodb":
         if query == "singleRead":
             exec_time_list = []
@@ -233,6 +240,11 @@ def performance(**kwargs):
         elif query == "deleteTables":
             mongodbBenchmarkTest.dropProfilesCollection()
             mongodbBenchmarkTest.dropRelationsCollection()
+        elif query == "insertIntoTables":
+            mongodbBenchmarkTest.createRelationsCollection()
+            mongodbBenchmarkTest.createProfileCollection()
+            mongodbBenchmarkTest.insertIntoRelationsCollection()
+            mongodbBenchmarkTest.insertIntoProfilesCollection()
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ def common_options(f):
                      help="Choose Database names from one of the following: 'mongodb', 'neo4j', 'postgres'"),
 
         click.option('--query', '-q', type=click.Choice(
-            ['singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'],
+            ['singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath','deleteTables'],
             case_sensitive=True),
                      help="Choose one query from one of the following: 'singleRead', 'singleWrite', 'aggregate','neighbors', 'neighbors2', 'neighbors2data','shortestPath'"),
         click.option('--number', '-n', type=int,
@@ -103,6 +103,8 @@ def performance(**kwargs):
             print("Average execution time by running the query %s times is: %s milliseconds"%(number,avg_exec_time))
             print(f"CPU used = {cpuMemoryList[0]:.4f}%")
             print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+        elif query == "deleteTables":
+            neo4jBenchmarkTest.deleteAllNodesAndRelationships()
     elif database == "postgres":
         if query == "singleRead":
             exec_time_list = []
@@ -164,6 +166,9 @@ def performance(**kwargs):
             print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
             print(f"CPU used = {cpuMemoryList[0]:.4f}%")
             print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
+        elif query == "deleteTables":
+            postgresBenchmarkTest.drop_tables("profiles")
+            postgresBenchmarkTest.drop_tables("relations")
     elif database == "mongodb":
         if query == "singleRead":
             exec_time_list = []
@@ -225,7 +230,9 @@ def performance(**kwargs):
             print("Average execution time by running the query %s times is: %s milliseconds" % (number, avg_exec_time))
             print(f"CPU used = {cpuMemoryList[0]:.4f}%")
             print(f"MEMORY used = {cpuMemoryList[1]:.4f}%")
-
+        elif query == "deleteTables":
+            mongodbBenchmarkTest.dropProfilesCollection()
+            mongodbBenchmarkTest.dropRelationsCollection()
 
 
 if __name__ == "__main__":

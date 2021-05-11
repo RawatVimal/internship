@@ -3,12 +3,12 @@ import text_to_json_conversion
 import postgresBenchmarkTest ,mongodbBenchmarkTest, neo4jBenchmarkTest
 
 if __name__ == "__main__":
-    # download datasets,unzip, convert to json and remove txt files
-    #downloadPokecDataset.downloadDataset()
+    #download datasets,unzip, convert to json and remove txt files
+    downloadPokecDataset.downloadDataset()
     print("Conversion of from txt to json started..")
     text_to_json_conversion.text_to_json_Profiles_table()
     text_to_json_conversion.text_to_json_Relationship_table()
-    print("Conversion of from txt to json finsihed..")
+    print("Conversion of from txt to json finished..")
 
     # setup postgres (create db and insert data)
     print("Setting up of postgres database and insertion of data started..")

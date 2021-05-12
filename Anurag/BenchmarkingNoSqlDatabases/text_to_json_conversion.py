@@ -1,4 +1,6 @@
 import json
+import os
+
 
 def text_to_json_Profiles_table():
 
@@ -17,8 +19,8 @@ def text_to_json_Profiles_table():
         for line in data:
             line = line.strip('\n')
             ldata = line.split('\t')
-            if ldata[0] == "500":
-                break
+            #if ldata[0] == "500":
+            #    break
             temp_profile_data = {}
             for i in range(len(columns)):
                 temp_profile_data[columns[i]] = ldata[i]
@@ -28,6 +30,8 @@ def text_to_json_Profiles_table():
         json.dump(profile_data, fp, indent=4)
     #from pprint import pprint
     #pprint(profile_data)
+
+    os.remove("soc-pokec-profiles.txt")
 
 
 def text_to_json_Relationship_table():
@@ -39,8 +43,8 @@ def text_to_json_Relationship_table():
         for line in data:
             line = line.strip('\n')
             ldata = line.split('\t')
-            if ldata[0] == "83" and ldata[1] == "619":
-               break
+            #if ldata[0] == "83" and ldata[1] == "619":
+            #   break
             temp_profile_data = {}
             for i in range(len(columns)):
                 temp_profile_data[columns[i]] = ldata[i]
@@ -48,8 +52,10 @@ def text_to_json_Relationship_table():
 
     with open('relations.json', 'w') as fp:
         json.dump(relationship_data, fp, indent=4)
-    from pprint import pprint
-    pprint(relationship_data)
+    #from pprint import pprint
+    #pprint(relationship_data)
+
+    os.remove("soc-pokec-relationships.txt")
 
 
 if __name__ == "__main__":

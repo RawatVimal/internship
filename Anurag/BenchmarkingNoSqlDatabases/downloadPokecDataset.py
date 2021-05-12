@@ -1,4 +1,5 @@
 import re
+import urllib
 from urllib import request
 import gzip
 import shutil
@@ -10,7 +11,7 @@ def downloadDataset():
     print("Downloading pokec dataset started..")
     url1 = "https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz"
     file_name1 = re.split(pattern='/', string=url1)[-1]
-    r1 = request.urlretrieve(url=url1, filename=file_name1)
+    r1 = urllib.request.urlretrieve(url=url1, filename=file_name1)
     txt1 = "soc-pokec-relationships.txt"
 
     with gzip.open(file_name1, 'rb') as f_in:
@@ -22,7 +23,7 @@ def downloadDataset():
 
     url1 = "https://snap.stanford.edu/data/soc-pokec-profiles.txt.gz"
     file_name1 = re.split(pattern='/', string=url1)[-1]
-    r1 = request.urlretrieve(url=url1, filename=file_name1)
+    r1 = urllib.request.urlretrieve(url=url1, filename=file_name1)
     txt1 = "soc-pokec-profiles.txt"
 
     with gzip.open(file_name1, 'rb') as f_in:

@@ -11,10 +11,9 @@
 - [x] Explore different implementation for Feature comparision and performance benchmarking module of SuggestDb.
 - [x] Re-designing performance benchmarking scripts in Python for MongoDb, CouchDb, Neo4J and PostgreS database.
 - [x] Re-designing and put NoSQL performance benchmarking scripts in a docker.
-- [ ] Working on Airflow pipeline to make schedule run of SuggestDb scripts.
 
 ### Bonus Point Objective
-- [ ] set up cron job or somilar automated pipeline for database benchmarking
+- [ ] Working on Airflow pipeline to make schedule run of SuggestDb scripts.
 - [ ] Building an API (only design) to execute pipeline for Database benchmarking
 ### Minimum expected result
 - [x] Working comfortably with NoSQL databases.

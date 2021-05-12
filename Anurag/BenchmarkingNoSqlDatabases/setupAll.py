@@ -12,7 +12,6 @@ if __name__ == "__main__":
 
     # setup postgres (create db and insert data)
     print("Setting up of postgres database and insertion of data started..")
-    postgresBenchmarkTest.create_database()
     postgresBenchmarkTest.create_tables()
     postgresBenchmarkTest.Insert_INTO_profiles_table()
     postgresBenchmarkTest.Insert_INTO_relations_table()

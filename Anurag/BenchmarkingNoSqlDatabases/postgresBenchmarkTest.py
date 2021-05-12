@@ -9,7 +9,7 @@ import mongodbBenchmarkTest,neo4jBenchmarkTest
 
 def create_connection():
 
-    conn = psycopg2.connect(dbname='test',
+    conn = psycopg2.connect(dbname='postgres',
 
                            user='postgres',
 
@@ -423,3 +423,4 @@ if __name__ == "__main__":
     #neighbors2()
     #neighbors2data()
     #aggregate()
+    #create_database()

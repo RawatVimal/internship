@@ -1,0 +1,6 @@
+psutil==5.8.0
+psycopg2_binary==2.8.6
+pymongo==3.11.3
+Js2Py==0.70
+py2neo==2021.1.1
+Click==7.0

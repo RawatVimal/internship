@@ -4,8 +4,6 @@
 - [x] Basic understanding of Databases (MongoDB, PostgreSQL, Neo4J, CouchDB) in context of CRUD operatopns and Aggregation queries.
 - [x] Basic understanding of Docker commands and docker compose. [![link](https://stackify.com/docker-tutorial/)]
 - [x] Working with Python packages(database clients, __networkx__ and other basic ones) [![link](https://networkx.org/)]
-- [ ] Understanding of __Data lineage discovery__ and __Data Integration__ basic concepts (some solutions in general):
-- [ ] Understanding and development of __GraphQL__ and __REST API__
 
 ### Main objective
 - [x] Explore different implementation for Feature comparision and performance benchmarking module of SuggestDb.

@@ -1,9 +1,22 @@
 import datetime
 import os
+import csv
 
 import pandas as pd
 
 import mongodbBenchmarkTest,postgresBenchmarkTest,neo4jBenchmarkTest,createAndRemoveContainers,text_to_json_conversion,downloadPokecDataset
+
+# define how many times you want to run each query
+# queries will be executed that many times and avg exec time,avg cpu and avg memory is returned
+number = 20
+
+exec_time_list = []         # list to store avg exec time
+cpu_consumption = []        # list to store avg cpu consumption
+memory_consumption = []     # list to store avg memory consumption
+
+mongodb_container_names = ["mongodb_latest_27019","mongo_4.2_27018"]    # list of mongodb container names
+postgres_container_names = ["postgres_latest_5434","postgres_10.0_5435"]    # list of mongodb container names
+neo4j_container_names = ["neo4j_latest_3003","neo4j_3.5.22_3004"]    # list of mongodb container names
 
 def downloadDatasetsAndConvertToJson():
     #download datasets,unzip, convert to json and remove zip and text files
@@ -13,27 +26,42 @@ def downloadDatasetsAndConvertToJson():
     text_to_json_conversion.text_to_json_Relationship_table()
     print("Conversion of from txt to json finished..")
 
-def setupDatabases():
+    if os.path.isfile("benchmarkingResults.csv"):
+        print("benchmarkingResults.csv already exists")
+    else:
+        with open('benchmarkingResults.csv', 'w', newline='') as csvfile:
+            headers = ['Date', 'Database', 'Database Version', 'Query', 'Avg_Exec_Time', 'Avg_Memory_Used', 'Avg_Cpu_Used']
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(headers)  # write header
+
+def setupPostgresDatabase():
     # setup postgres (create db and insert data)
     print("Setting up of postgres database and insertion of data started..")
-    postgresBenchmarkTest.create_tables()
-    postgresBenchmarkTest.Insert_INTO_profiles_table()
-    postgresBenchmarkTest.Insert_INTO_relations_table()
+    for containerName in postgres_container_names:
+        postgresBenchmarkTest.create_database(containerName)
+        postgresBenchmarkTest.create_tables(containerName)
+        postgresBenchmarkTest.Insert_INTO_profiles_table(containerName)
+        postgresBenchmarkTest.Insert_INTO_relations_table(containerName)
     print("Setting up of postgres database and insertion of data finished..")
 
+def setupMongodbDatabase():
     # setup mongodb (create db and insert data)
     print("Setting up of mongodb database and insertion of data started..")
-    mongodbBenchmarkTest.createDB()
-    mongodbBenchmarkTest.createProfileCollection()
-    mongodbBenchmarkTest.createRelationsCollection()
-    mongodbBenchmarkTest.insertIntoProfilesCollection()
-    mongodbBenchmarkTest.insertIntoRelationsCollection()
+
+    for containerName in mongodb_container_names:
+        mongodbBenchmarkTest.createDB(containerName)
+        mongodbBenchmarkTest.createProfileCollection(containerName)
+        mongodbBenchmarkTest.createRelationsCollection(containerName)
+        mongodbBenchmarkTest.insertIntoProfilesCollection(containerName)
+        mongodbBenchmarkTest.insertIntoRelationsCollection(containerName)
     print("Setting up of mongodb database and insertion of data finished..")
 
+def setupNeo4jDatabase():
     # setup neo4j (create db and insert data)
     print("Setting up of neo4j database and insertion of data started..")
-    neo4jBenchmarkTest.insertNodesIntoProfiles()
-    neo4jBenchmarkTest.createRelationships()
+    for containerName in neo4j_container_names:
+        neo4jBenchmarkTest.insertNodesIntoProfiles(containerName)
+        neo4jBenchmarkTest.createRelationships(containerName)
     print("Setting up of neo4j database and insertion of data finished..")
 
 
@@ -41,200 +69,644 @@ def setupDatabases():
 def singleReadQuery():
 
     #mongodb read query
-    cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeM = datetime.datetime.now()
-    exec_timeM = mongodbBenchmarkTest.singleRead()
+    for containerName in mongodb_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = mongodbBenchmarkTest.singleRead(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (number,'{:.4f}'.format(avg_exec_time) ))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        #df for mongodb
+        newRows = {'Date' : [current_timeM],
+                    'Database' : ['Mongodb'],
+                    'Database Version' : [versionName],
+                    'Query' : ['singleRead'],
+                    'ExecTime' : [format(avg_exec_time, ".4f")],
+                    'Memory_Used' : [format(avg_memory_consumption, ".4f")],
+                    'Cpu_Used' : [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+             dfToCsv.to_csv(f, index=False, header=False)
 
     #postgres read query
-    cpuMemoryListP = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeP = datetime.datetime.now()
-    exec_timeP = postgresBenchmarkTest.singleRead()
+
+    for containerName in postgres_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = postgresBenchmarkTest.singleRead(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+        number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for postgres
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Postgres'],
+                   'Database Version': [versionName],
+                   'Query': ['singleRead'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     #Neo4j read query
-    cpuMemoryListN = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeN = datetime.datetime.now()
-    exec_timeN = neo4jBenchmarkTest.singleRead()
 
-    #create rows to be inserted into csv
-    newRows = {'Attribute': ['Query','DateTime','ExecTime in ms','Memory_Used in %','Cpu_Used in %'],
-               'Mongodb' : ['singleRead',current_timeM,format(exec_timeM, ".4f"),format(cpuMemoryListM[1], ".4f"),format(cpuMemoryListM[0], ".4f")],
-               'Postgres' :['singleRead',current_timeP,format(exec_timeP, ".4f"),format(cpuMemoryListP[1], ".4f"),format(cpuMemoryListP[0], ".4f")] ,
-               'Neo4j': ['singleRead',current_timeN,format(exec_timeN, ".4f"),format(cpuMemoryListN[1], ".4f"),format(cpuMemoryListN[0], ".4f")]}
+    for containerName in neo4j_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
 
-    #writing to csv file
-    dfToCsv = pd.DataFrame(newRows)
-    with open('benchmarkingResults.csv', 'a',newline = '') as f:
-        dfToCsv.to_csv(f, index=False,header = False)
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = neo4jBenchmarkTest.singleRead(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for neo4j
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Neo4j'],
+                   'Database Version': [versionName],
+                   'Query': ['singleRead'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
 def singleWriteQuery():
+
     # mongodb write query
-    cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeM = datetime.datetime.now()
-    exec_timeM = mongodbBenchmarkTest.singleWrite()
+    for containerName in mongodb_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = mongodbBenchmarkTest.singleWrite(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for mongodb
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Mongodb'],
+                   'Database Version': [versionName],
+                   'Query': ['singleWrite'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # postgres write query
-    cpuMemoryListP = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeP = datetime.datetime.now()
-    exec_timeP = postgresBenchmarkTest.singleWrite()
+    for containerName in postgres_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = postgresBenchmarkTest.singleWrite(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for mongodb
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Postgres'],
+                   'Database Version': [versionName],
+                   'Query': ['singleWrite'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # Neo4j write query
-    cpuMemoryListN = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeN = datetime.datetime.now()
-    exec_timeN = neo4jBenchmarkTest.singleWrite()
+    for containerName in neo4j_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
 
-    # create rows to be inserted into csv
-    newRows = {'Attribute': ['Query', 'DateTime', 'ExecTime in ms', 'Memory_Used in %', 'Cpu_Used in %'],
-               'Mongodb': ['singleWrite', current_timeM, format(exec_timeM, ".4f"), format(cpuMemoryListM[1], ".4f"),
-                           format(cpuMemoryListM[0], ".4f")],
-               'Postgres': ['singleWrite', current_timeP, format(exec_timeP, ".4f"), format(cpuMemoryListP[1], ".4f"),
-                            format(cpuMemoryListP[0], ".4f")],
-               'Neo4j': ['singleWrite', current_timeN, format(exec_timeN, ".4f"), format(cpuMemoryListN[1], ".4f"),
-                         format(cpuMemoryListN[0], ".4f")]}
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = neo4jBenchmarkTest.singleWrite(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
 
-    # writing to csv file
-    dfToCsv = pd.DataFrame(newRows)
-    with open('benchmarkingResults.csv', 'a', newline='') as f:
-        dfToCsv.to_csv(f, index=False, header=False)
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for neo4j
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Neo4j'],
+                   'Database Version': [versionName],
+                   'Query': ['singleWrite'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
 def aggregateQuery():
     # mongodb aggregate query
-    cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeM = datetime.datetime.now()
-    exec_timeM = mongodbBenchmarkTest.aggregate()
+    for containerName in mongodb_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
 
-    # postgres aggregate query
-    cpuMemoryListP = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeP = datetime.datetime.now()
-    exec_timeP = postgresBenchmarkTest.aggregate()
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = mongodbBenchmarkTest.aggregate(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
 
-    # Neo4j aggregate query
-    cpuMemoryListN = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeN = datetime.datetime.now()
-    exec_timeN = neo4jBenchmarkTest.aggregate()
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
 
-    # create rows to be inserted into csv
-    newRows = {'Attribute': ['Query', 'DateTime', 'ExecTime in ms', 'Memory_Used in %', 'Cpu_Used in %'],
-               'Mongodb': ['aggregate', current_timeM, format(exec_timeM, ".4f"), format(cpuMemoryListM[1], ".4f"),
-                           format(cpuMemoryListM[0], ".4f")],
-               'Postgres': ['aggregate', current_timeP, format(exec_timeP, ".4f"), format(cpuMemoryListP[1], ".4f"),
-                            format(cpuMemoryListP[0], ".4f")],
-               'Neo4j': ['aggregate', current_timeN, format(exec_timeN, ".4f"), format(cpuMemoryListN[1], ".4f"),
-                         format(cpuMemoryListN[0], ".4f")]}
-
-    # writing to csv file
+    # df for mongodb
+    newRows = {'Date': [current_timeM],
+               'Database': ['Mongodb'],
+               'Database Version': [versionName],
+               'Query': ['aggregate'],
+               'ExecTime': [format(avg_exec_time, ".4f")],
+               'Memory_Used': [format(avg_memory_consumption, ".4f")],
+               'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
     dfToCsv = pd.DataFrame(newRows)
     with open('benchmarkingResults.csv', 'a', newline='') as f:
         dfToCsv.to_csv(f, index=False, header=False)
+
+    # postgres aggregate query
+    for containerName in postgres_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = postgresBenchmarkTest.aggregate(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for postgres
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Postgres'],
+                   'Database Version': [versionName],
+                   'Query': ['aggregate'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
+
+    # Neo4j aggregate query
+    for containerName in neo4j_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = neo4jBenchmarkTest.aggregate(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for neo4j
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Neo4j'],
+                   'Database Version': [versionName],
+                   'Query': ['aggregate'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
 
 def neighborsQuery():
     # mongodb neighbors query
-    cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeM = datetime.datetime.now()
-    exec_timeM = mongodbBenchmarkTest.neighbors()
+    for containerName in mongodb_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = mongodbBenchmarkTest.neighbors(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for mongodb
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Mongodb'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # postgres neighbors query
-    cpuMemoryListP = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeP = datetime.datetime.now()
-    exec_timeP = postgresBenchmarkTest.neighbors()
+    for containerName in postgres_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = postgresBenchmarkTest.neighbors(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for postgres
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Postgres'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # Neo4j neighbors query
-    cpuMemoryListN = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeN = datetime.datetime.now()
-    exec_timeN = neo4jBenchmarkTest.neighbors()
+    for containerName in neo4j_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
 
-    # create rows to be inserted into csv
-    newRows = {'Attribute': ['Query', 'DateTime', 'ExecTime in ms', 'Memory_Used in %', 'Cpu_Used in %'],
-               'Mongodb': ['neighbors', current_timeM, format(exec_timeM, ".4f"), format(cpuMemoryListM[1], ".4f"),
-                           format(cpuMemoryListM[0], ".4f")],
-               'Postgres': ['neighbors', current_timeP, format(exec_timeP, ".4f"), format(cpuMemoryListP[1], ".4f"),
-                            format(cpuMemoryListP[0], ".4f")],
-               'Neo4j': ['neighbors', current_timeN, format(exec_timeN, ".4f"), format(cpuMemoryListN[1], ".4f"),
-                         format(cpuMemoryListN[0], ".4f")]}
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = neo4jBenchmarkTest.neighbors(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
 
-    # writing to csv file
-    dfToCsv = pd.DataFrame(newRows)
-    with open('benchmarkingResults.csv', 'a', newline='') as f:
-        dfToCsv.to_csv(f, index=False, header=False)
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for neo4j
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Neo4j'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
 def neighbors2Query():
     # mongodb neighbors2 query
-    cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeM = datetime.datetime.now()
-    exec_timeM = mongodbBenchmarkTest.neighbors2()
+    for containerName in mongodb_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = mongodbBenchmarkTest.neighbors2(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for mongodb
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Mongodb'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors2'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # postgres neighbors2 query
-    cpuMemoryListP = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeP = datetime.datetime.now()
-    exec_timeP = postgresBenchmarkTest.neighbors2()
+    for containerName in postgres_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = postgresBenchmarkTest.neighbors2(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for postgres
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Postgres'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors2'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # Neo4j neighbors2 query
-    cpuMemoryListN = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeN = datetime.datetime.now()
-    exec_timeN = neo4jBenchmarkTest.neighbors2()
+    for containerName in neo4j_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
 
-    # create rows to be inserted into csv
-    newRows = {'Attribute': ['Query', 'DateTime', 'ExecTime in ms', 'Memory_Used in %', 'Cpu_Used in %'],
-               'Mongodb': ['neighbors2', current_timeM, format(exec_timeM, ".4f"), format(cpuMemoryListM[1], ".4f"),
-                           format(cpuMemoryListM[0], ".4f")],
-               'Postgres': ['neighbors2', current_timeP, format(exec_timeP, ".4f"), format(cpuMemoryListP[1], ".4f"),
-                            format(cpuMemoryListP[0], ".4f")],
-               'Neo4j': ['neighbors2', current_timeN, format(exec_timeN, ".4f"), format(cpuMemoryListN[1], ".4f"),
-                         format(cpuMemoryListN[0], ".4f")]}
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = neo4jBenchmarkTest.neighbors2(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
 
-    # writing to csv file
-    dfToCsv = pd.DataFrame(newRows)
-    with open('benchmarkingResults.csv', 'a', newline='') as f:
-        dfToCsv.to_csv(f, index=False, header=False)
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for neo4j
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Neo4j'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors2'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
+
 
 def neighbors2dataQuery():
     # mongodb neighbors2data query
-    cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeM = datetime.datetime.now()
-    exec_timeM = mongodbBenchmarkTest.neighbors2data()
+    for containerName in mongodb_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = mongodbBenchmarkTest.neighbors2data(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for mongodb
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Mongodb'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors2data'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # postgres neighbors2data query
-    cpuMemoryListP = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeP = datetime.datetime.now()
-    exec_timeP = postgresBenchmarkTest.neighbors2data()
+    for containerName in postgres_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
+
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = postgresBenchmarkTest.neighbors2data(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
+
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for postgres
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Postgres'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors2data'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
     # Neo4j neighbors2data query
-    cpuMemoryListN = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeN = datetime.datetime.now()
-    exec_timeN = neo4jBenchmarkTest.neighbors2data()
+    for containerName in neo4j_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
 
-    # create rows to be inserted into csv
-    newRows = {'Attribute': ['Query', 'DateTime', 'ExecTime in ms', 'Memory_Used in %', 'Cpu_Used in %'],
-               'Mongodb': ['neighbors2data', current_timeM, format(exec_timeM, ".4f"), format(cpuMemoryListM[1], ".4f"),
-                           format(cpuMemoryListM[0], ".4f")],
-               'Postgres': ['neighbors2data', current_timeP, format(exec_timeP, ".4f"), format(cpuMemoryListP[1], ".4f"),
-                            format(cpuMemoryListP[0], ".4f")],
-               'Neo4j': ['neighbors2data', current_timeN, format(exec_timeN, ".4f"), format(cpuMemoryListN[1], ".4f"),
-                         format(cpuMemoryListN[0], ".4f")]}
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = neo4jBenchmarkTest.neighbors2data(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
 
-    # writing to csv file
-    dfToCsv = pd.DataFrame(newRows)
-    with open('benchmarkingResults.csv', 'a', newline='') as f:
-        dfToCsv.to_csv(f, index=False, header=False)
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for neo4j
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Neo4j'],
+                   'Database Version': [versionName],
+                   'Query': ['neighbors2data'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
+
 
 def shortestpathQuery():
 
     # Neo4j shortestpathQuery query
-    cpuMemoryListN = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
-    current_timeN = datetime.datetime.now()
-    exec_timeN = neo4jBenchmarkTest.shortestPath()
+    for containerName in neo4j_container_names:
+        data = containerName
+        versionName = "_".join(data.split("_")[:2])
+        current_timeM = datetime.datetime.now()
 
-    # create rows to be inserted into csv
-    newRows = {'Attribute': ['Query', 'DateTime', 'ExecTime in ms', 'Memory_Used in %', 'Cpu_Used in %'],
-               'Mongodb': ['shortestPath','', '', '',''],
-               'Postgres': ['shortestPath','','','',''],
-               'Neo4j': ['shortestPath', current_timeN, format(exec_timeN, ".4f"), format(cpuMemoryListN[1], ".4f"),
-                         format(cpuMemoryListN[0], ".4f")]}
+        for i in range(number):
+            cpuMemoryListM = mongodbBenchmarkTest.calculateCPUandMemoryUsage(os.getpid())
+            exec_timeM = neo4jBenchmarkTest.shortestPath(containerName)
+            exec_time_list.append(exec_timeM)
+            cpu_consumption.append(cpuMemoryListM[0])
+            memory_consumption.append(cpuMemoryListM[1])
 
-    # writing to csv file
-    dfToCsv = pd.DataFrame(newRows)
-    with open('benchmarkingResults.csv', 'a', newline='') as f:
-        dfToCsv.to_csv(f, index=False, header=False)
+        avg_exec_time = sum(exec_time_list) / len(exec_time_list)
+        avg_cpu_consumption = sum(cpu_consumption) / len(cpu_consumption)
+        avg_memory_consumption = sum(memory_consumption) / len(memory_consumption)
+        print("Average execution time by running the query %s times is: %s milliseconds" % (
+            number, '{:.4f}'.format(avg_exec_time)))
+        print(f"Average CPU used = {avg_cpu_consumption:.4f}%")
+        print(f"Average MEMORY used = {avg_memory_consumption:.4f}%")
+
+        # df for neo4j
+        newRows = {'Date': [current_timeM],
+                   'Database': ['Neo4j'],
+                   'Database Version': [versionName],
+                   'Query': ['shortestPath'],
+                   'ExecTime': [format(avg_exec_time, ".4f")],
+                   'Memory_Used': [format(avg_memory_consumption, ".4f")],
+                   'Cpu_Used': [format(avg_cpu_consumption, ".4f")]}
+        dfToCsv = pd.DataFrame(newRows)
+        with open('benchmarkingResults.csv', 'a', newline='') as f:
+            dfToCsv.to_csv(f, index=False, header=False)
 
 
 def createAndRunContainers():
@@ -248,14 +720,37 @@ def stopAndRemoveContainersAndDatasets():
         os.remove("data.json")
         os.remove("relations.json")
 
+def deleteDatabasesAndDataset():
+    #delete mongodb database
+    for containerName in mongodb_container_names:
+        mongodbBenchmarkTest.dropDatabase(containerName)
+
+    #delete postgres database
+    for containerName in postgres_container_names:
+        postgresBenchmarkTest.drop_tables('profiles',containerName)
+        postgresBenchmarkTest.drop_tables('relations',containerName)
+        postgresBenchmarkTest.drop_database(containerName)
+
+    #delete postgres database
+    for containerName in neo4j_container_names:
+        neo4jBenchmarkTest.deleteAllNodesAndRelationships(containerName)
+
+    #delete datasets
+    # os.remove("data.json")
+    # os.remove("relations.json")
+
 if __name__ == "__main__":
-    createAndRunContainers()
-    downloadDatasetsAndConvertToJson()
-    setupDatabases()
-    singleReadQuery()
-    singleWriteQuery()
-    aggregateQuery()
-    neighborsQuery()
-    neighbors2Query()
-    shortestpathQuery()
-    stopAndRemoveContainersAndDatasets()
+     #createAndRunContainers()
+     #downloadDatasetsAndConvertToJson()
+     setupPostgresDatabase()
+     setupMongodbDatabase()
+     setupNeo4jDatabase()
+     singleReadQuery()
+     singleWriteQuery()
+     aggregateQuery()
+     neighborsQuery()
+     neighbors2Query()
+     neighbors2dataQuery()
+     shortestpathQuery()
+     deleteDatabasesAndDataset()
+     #stopAndRemoveContainersAndDatasets()

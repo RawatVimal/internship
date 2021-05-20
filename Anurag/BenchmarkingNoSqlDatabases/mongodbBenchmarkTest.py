@@ -1,6 +1,6 @@
 import datetime
 import json
-import os
+import os,re
 import time
 import neo4jBenchmarkTest
 from pymongo import MongoClient
@@ -9,24 +9,28 @@ import psutil
 
 #------------- Create db connection and create database ----------------------------
 
-def create_connection():
+def create_connection(containerName):
+    port_no = re.split(pattern='_', string=containerName)[-1] # <--- get port no from docker container's name
+    containerName = containerName
     host_address = "localhost"
-    port_no = "27017"
+    #port_no = "27017"
     username = "mongo"
     password = "secret"
 
     try:
-        conn_string = "mongodb://"+username+":"+password+"@"+host_address+":"+port_no+"/" # <----enter username,pwd,host address and port no accordingly
+        conn_string = "mongodb://" + username + ":" + password + "@" + host_address + ":" + port_no + "/"  # <----enter username,pwd,host address and port no accordingly
         myclient = MongoClient(conn_string)
-        #print("Connected successfully!!!")
-        #print(myclient)
+        # print("Connected successfully!!!")
+        # print(myclient)
     except:
         print("Could not connect to MongoDB")
 
     return myclient
 
-def createDB():
-    myclient = create_connection()
+def createDB(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
+    print(myclient)
 
     dblist = myclient.list_database_names()
     if "test" in dblist:
@@ -36,22 +40,25 @@ def createDB():
 
     myclient.close()
 
-def createProfileCollection():
-    myclient = create_connection()
+def createProfileCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     profilesCollection = db["profiles"]
     #print(db)
     myclient.close()
 
-def createRelationsCollection():
-    myclient = create_connection()
+def createRelationsCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     relationsCollection = db["relations"]
     #print(db)
     myclient.close()
 
-def insertIntoProfilesCollection():
-    myclient = create_connection()
+def insertIntoProfilesCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     profileCol = db.profiles
     # Loading or Opening the json file
@@ -67,8 +74,9 @@ def insertIntoProfilesCollection():
 
     myclient.close()
 
-def insertIntoRelationsCollection():
-    myclient = create_connection()
+def insertIntoRelationsCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     relationsCol = db.relations
     # Loading or Opening the json file
@@ -84,8 +92,9 @@ def insertIntoRelationsCollection():
 
     myclient.close()
 
-def readProfilesCollection():
-    myclient = create_connection()
+def readProfilesCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.profiles
     for x in mycol.find():
@@ -93,9 +102,9 @@ def readProfilesCollection():
 
     myclient.close()
 
-def readRelationsCollection():
-
-    myclient = create_connection()
+def readRelationsCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.relations
     for x in mycol.find():
@@ -103,53 +112,60 @@ def readRelationsCollection():
     myclient.close()
 
 
-def dropProfilesCollection():
-    myclient = create_connection()
+def dropProfilesCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.profiles
     mycol.drop()
     #print("profiles connection has been deleted.")
     myclient.close()
 
-def dropRelationsCollection():
-    myclient = create_connection()
+def dropRelationsCollection(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.relations
     mycol.drop()
     #print("relations connection has been deleted.")
     myclient.close()
 
-def dropDatabase():
-    myclient = create_connection()
+def dropDatabase(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     myclient.drop_database('test')
     #print("Test database has been deleted.")
     myclient.close()
 
-def singleRead():
-    myclient = create_connection()
+def singleRead(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.profiles
+    randomUserIDList = neo4jBenchmarkTest.createUserIDList()
     start_time = datetime.datetime.now()
-    x = mycol.find_one()
+    x = mycol.find_one({ "user_id": randomUserIDList[0] })
     end_time = datetime.datetime.now()
-    #print(x)
+    print(x)
     myclient.close()
     return (end_time - start_time).total_seconds() * 1000
 
-def singleWrite():
-    myclient = create_connection()
+def singleWrite(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.profiles
-    with open('data.json',errors='ignore') as json_data:
-        data = json.load(json_data)
+    randomUserIDList = neo4jBenchmarkTest.createUserIDList()
     start_time = datetime.datetime.now()
-    mycol.insert_one(data[400])
+    singleWriteResult = mycol.update_one({ "user_id": randomUserIDList[0] },{ "$set": { "AGE": randomUserIDList[1] }})
+    start_time = datetime.datetime.now()
     end_time = datetime.datetime.now()
     myclient.close()
     return (end_time - start_time).total_seconds() * 1000
 
-def aggregate():
-    myclient = create_connection()
+def aggregate(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.profiles
     start_time = datetime.datetime.now()
@@ -167,8 +183,9 @@ def aggregate():
     myclient.close()
     return (end_time - start_time).total_seconds() * 1000
 
-def neighbors():
-    myclient = create_connection()
+def neighbors(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.relations
     randomUserIDList = neo4jBenchmarkTest.createUserIDList()
@@ -183,8 +200,9 @@ def neighbors():
     myclient.close()
     return (end_time - start_time).total_seconds() * 1000
 
-def neighbors2():
-    myclient = create_connection()
+def neighbors2(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.relations
     #this is sql query
@@ -212,8 +230,9 @@ def neighbors2():
     return (end_time - start_time).total_seconds() * 1000
 
 
-def neighbors2data():
-    myclient = create_connection()
+def neighbors2data(containerName):
+    containerName = containerName
+    myclient = create_connection(containerName)
     db = myclient.test
     mycol = db.relations
 
@@ -253,18 +272,19 @@ def calculateCPUandMemoryUsage(pid):
     return cpuMemoryList
 
 if __name__ == "__main__":
-    #createDB()
+    #create_connection("mongodb_latest")
+    #createDB("mongodb_latest_27019")
     #createProfileCollection()
     #createRelationsCollection()
     #insertIntoProfilesCollection()
     #insertIntoRelationsCollection()
     #readProfilesCollection()
     #readRelationsCollection()
-    dropProfilesCollection()
-    dropRelationsCollection()
-    dropDatabase()
-    #singleRead()
-    #singleWrite()
+    #dropProfilesCollection()
+    #dropRelationsCollection()
+    #dropDatabase("mongo_4.2")
+    singleRead("mongodb_latest_27019")
+    #singleWrite("mongodb_latest")
     #aggregate()
     #neighbors()
     #neighbors2()

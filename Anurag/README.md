@@ -17,4 +17,3 @@
 - [x] Working comfortably with NoSQL databases.
 - [x] Working comfortbly with Docker environment.
 - [x] Delivering feature comparision and performance benchmarking for MongoDb, CouchDb, Neo4J and PostgreS database.
-- [ ] Understanding Data Integration and Data discovery and some published litrature on this topic.

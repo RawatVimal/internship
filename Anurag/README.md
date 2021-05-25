@@ -11,7 +11,7 @@
 - [x] Re-designing and put NoSQL performance benchmarking scripts in a docker.
 
 ### Bonus Point Objective
-- [ ] Working on Airflow pipeline to make schedule run of SuggestDb scripts.
+- [x] Working on Airflow pipeline to make schedule run of SuggestDb scripts.
 - [ ] Building an API (only design) to execute pipeline for Database benchmarking
 ### Minimum expected result
 - [x] Working comfortably with NoSQL databases.

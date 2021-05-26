@@ -12,7 +12,7 @@
 
 ### Bonus Point Objective
 - [x] Working on Airflow pipeline to make schedule run of SuggestDb scripts.
-- [ ] Building an API (only design) to execute pipeline for Database benchmarking
+- [ ] Building an API (only design) to execute pipeline for Database benchmarking and pull results of the same
 
 ### Minimum expected result
 - [x] Working comfortably with NoSQL databases.

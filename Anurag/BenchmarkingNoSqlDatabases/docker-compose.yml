@@ -1,0 +1,69 @@
+services:
+  mongodb_latest:
+    image: mongo:latest
+    container_name: "mongodb_latest_27019"  # <---- give container name which ends with _ and exposed port no
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    ports:
+      - 27019:27017
+    volumes:
+      - $HOME/mongodb_data/mongodb_latest:/data/db
+
+  postgres_latest:
+    image: postgres:latest
+    container_name: "postgres_latest_5434"  # <---- give container name which ends with _ and exposed port no
+    volumes:
+      - $HOME/postgres_data/postgres_latest:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=postgres
+    ports:
+      - 5434:5432
+
+  neo4j_latest:
+      image: neo4j:latest
+      container_name: "neo4j_latest_3003"      # <---- give container name which ends with _ and port no of bolt
+      environment:
+        - NEO4J_AUTH=neo4j/test
+      volumes:
+        - $HOME/neo4j_data/neo4j_latest:/data
+      ports:
+        # http and bolt access respectively
+        - 7476:7474
+        - 3003:7687
+
+
+  mongodb_4.2:
+    image: mongo:4.2
+    container_name: "mongo_4.2_27018"  # <---- give container name which ends with _ and exposed port no
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    ports:
+      - 27018:27017
+    volumes:
+      - $HOME/mongodb_data/mongodb_4_2:/data/db
+
+  postgres_10.0:
+      image: postgres:10.0
+      container_name: "postgres_10.0_5435" # <---- give container name which ends with _ and exposed port no
+      volumes:
+        - $HOME/postgres_data/postgres_10_0:/var/lib/postgresql/data
+      environment:
+        - POSTGRES_PASSWORD=secret
+        - POSTGRES_USER=postgres
+      ports:
+        - 5435:5432
+
+  neo4j_3.5.22:
+      image: neo4j:3.5.22
+      container_name: "neo4j_3.5.22_3004"     # <---- give container name which ends with _ and port no of bolt
+      environment:
+        - NEO4J_AUTH=neo4j/test
+      volumes:
+        - $HOME/neo4j_data/neo4j_3_5_22:/data
+      ports:
+        # http and bolt access respectively
+        - 7475:7474
+        - 3004:7687

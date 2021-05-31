@@ -3,39 +3,42 @@ from py2neo import Graph
 from py2neo.bulk import create_nodes
 import json
 import random
+import re
 import mongodbBenchmarkTest
 import os
 
 # setting up the database connection
 
-def create_connection():
-    host_address = "localhost"
-    port_no = "7474"
+def create_connection(containerName):
+    bolt_port_no = re.split(pattern='_', string=containerName)[-1]  # <---- get port no from docker container's name
     username = "neo4j"
     password = "test"
 
-    connection_string = "http://"+host_address+":"+port_no+"/browser/"
+    connection_string = "bolt://localhost:"+bolt_port_no
 
     try:
 
         driver = Graph(connection_string, user=username, password=password)
-        #print("Connection to neo4j is established.")
+        # print("Connection to neo4j is established.")
+
         return driver
 
     except Exception as e:
         print("Failed to create the driver:", e)
 
 
-def insertNodesIntoProfiles():
+def insertNodesIntoProfiles(containerName):
     with open('data.json', errors='ignore') as json_data:
         data = json.load(json_data)
 
-    driver = create_connection()
+    containerName = containerName
+    driver = create_connection(containerName)
 
     create_nodes(driver.auto(), data, labels={"profiles"})
 
-def createRelationships():
-    driver = create_connection()
+def createRelationships(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
 
     with open('relations.json', errors='ignore') as json_data:
         data = json.load(json_data)
@@ -50,15 +53,16 @@ def createRelationships():
     #print(my_node)
 
 
-def deleteAllNodesAndRelationships():
-
-    driver = create_connection()
+def deleteAllNodesAndRelationships(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
     driver.delete_all()
     #print("All the nodes and relationships have been deleted.")
 
 
 def createUserIDList():
-    driver = create_connection()
+    containerName = "neo4j_latest_3003"
+    driver = create_connection(containerName)
 
     dataframe_userID = driver.run('MATCH (a:profiles) RETURN a.user_id').to_data_frame()
 
@@ -71,29 +75,33 @@ def createUserIDList():
     return randomTwoUserIDs
 
 
-def singleRead():
-
-    driver = create_connection()
+def singleRead(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
+    randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
 
-    my_node = driver.evaluate('MATCH (a:profiles) RETURN a')
+    my_node = driver.evaluate('MATCH (a:profiles {user_id: "%s"}) RETURN a'%(randomUserIDList[0]))
 
     end_time = datetime.datetime.now()
-    #print(my_node)
+    print(my_node)
     return (end_time - start_time).total_seconds() * 1000
 
-def singleWrite():
-    driver = create_connection()
+def singleWrite(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
+    randomUserIDList = createUserIDList()
+    print(randomUserIDList)
     start_time = datetime.datetime.now()
 
-    write = driver.run('CREATE (n:profiles) SET n.user_id = 5420, n.AGE = 23')
+    write = driver.run('MATCH (n:profiles {user_id: "%s"}) SET n.AGE = "%s"'%(randomUserIDList[0],randomUserIDList[1]))
 
     end_time = datetime.datetime.now()
     return (end_time - start_time).total_seconds() * 1000
 
-def aggregate():
-
-    driver = create_connection()
+def aggregate(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
     start_time = datetime.datetime.now()
 
     aggregate = driver.run('MATCH (x:profiles) RETURN sum(toInteger(x.AGE))')
@@ -102,9 +110,9 @@ def aggregate():
     #print("Aggregate AGE is : %s"%aggregate)
     return (end_time - start_time).total_seconds() * 1000
 
-def neighbors():
-
-    driver = create_connection()
+def neighbors(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
     randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
 
@@ -115,9 +123,9 @@ def neighbors():
     #print(result)
     return (end_time - start_time).total_seconds() * 1000
 
-def neighbors2():
-
-    driver = create_connection()
+def neighbors2(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
     randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
 
@@ -128,9 +136,9 @@ def neighbors2():
     #print(result)
     return (end_time - start_time).total_seconds() * 1000
 
-def neighbors2data():
-
-    driver = create_connection()
+def neighbors2data(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
     randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
 
@@ -141,9 +149,9 @@ def neighbors2data():
     #print(result)
     return (end_time - start_time).total_seconds() * 1000
 
-def shortestPath():
-
-    driver = create_connection()
+def shortestPath(containerName):
+    containerName = containerName
+    driver = create_connection(containerName)
     randomUserIDList = createUserIDList()
     start_time = datetime.datetime.now()
     result = driver.run('MATCH (s:profiles {user_id:"%s"}),(n:profiles {user_id:"%s"}), p = shortestPath((s)-[*]->(n)) RETURN [x in nodes(p) | x.user_id] as path'%(randomUserIDList[0],randomUserIDList[1])).to_table()
@@ -151,11 +159,11 @@ def shortestPath():
     return (end_time - start_time).total_seconds() * 1000
 
 if __name__ == "__main__":
-    #create_connection()
-    #insertNodesIntoProfiles()
-    #createRelationships()
-    #deleteAllNodesAndRelationships()
-    singleRead()
+    #create_connection("neo4j_latest_3003")
+    insertNodesIntoProfiles("neo4j_latest_3003")
+    #createRelationships("neo4j_latest_3003")
+    #deleteAllNodesAndRelationships("neo4j_latest_3003")
+    #singleRead()
     #singleWrite()
     #aggregate()
     #neighbors()

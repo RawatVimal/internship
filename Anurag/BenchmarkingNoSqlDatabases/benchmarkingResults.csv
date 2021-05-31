@@ -1,0 +1,31 @@
+Attribute,Mongodb,Postgres,Neo4j
+Query,singleRead,singleRead,singleRead
+DateTime,2021-05-13 00:18:07.396380,2021-05-13 00:18:07.581319,2021-05-13 00:18:07.950679
+ExecTime in ms,73.8570,8.5570,862.4120
+Memory_Used in %,0.8555,0.8568,0.8573
+Cpu_Used in %,0.0000,0.0000,0.0000
+Query,singleWrite,singleWrite,singleWrite
+DateTime,2021-05-13 00:18:08.938619,2021-05-13 00:18:09.141085,2021-05-13 00:18:09.274157
+ExecTime in ms,59.3390,1.4350,94.6170
+Memory_Used in %,0.8562,0.8580,0.8580
+Cpu_Used in %,0.0000,0.0000,0.0000
+Query,aggregate,aggregate,aggregate
+DateTime,2021-05-13 00:18:09.474409,2021-05-13 00:18:09.645914,2021-05-13 00:18:09.799277
+ExecTime in ms,54.6310,13.5040,185.7340
+Memory_Used in %,0.8579,0.8580,0.8580
+Cpu_Used in %,0.0000,0.0000,0.0000
+Query,neighbors,neighbors,neighbors
+DateTime,2021-05-13 00:18:10.135657,2021-05-13 00:18:10.326404,2021-05-13 00:18:10.512112
+ExecTime in ms,0.0000,7.1200,273.7620
+Memory_Used in %,0.8567,0.8581,0.8582
+Cpu_Used in %,0.0000,0.0000,0.0000
+Query,neighbors2,neighbors2,neighbors2
+DateTime,2021-05-13 00:18:10.969671,2021-05-13 00:18:11.229217,2021-05-13 00:18:11.423192
+ExecTime in ms,56.8250,15.6570,163.5980
+Memory_Used in %,0.8569,0.8582,0.8582
+Cpu_Used in %,0.0000,0.0000,0.0000
+Query,shortestPath,shortestPath,shortestPath
+DateTime,,,2021-05-13 00:18:11.772651
+ExecTime in ms,,,179.1170
+Memory_Used in %,,,0.8569
+Cpu_Used in %,,,0.0000
